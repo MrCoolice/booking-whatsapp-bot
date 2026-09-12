@@ -92,6 +92,25 @@ bilgilerini girip **"Tüm Ayarları ve Şablonları Kaydet"** butonuna basmanız
 
 ---
 
+## 🔑 Gerekli Bilgileri Alma Rehberi
+
+### 1. UltraMsg Instance ID & Token Nasıl Alınır?
+1. [UltraMsg.com](https://ultramsg.com) adresine gidin ve hesap oluşturun.
+2. Kontrol panelinden **"Add Instance"** butonuna tıklayarak yeni bir WhatsApp örneği açın.
+3. Sayfada size özel üretilen **Instance ID** (örn: `instance123456`) ve **Token** kodlarını kopyalayın.
+4. Telefonunuzdaki WhatsApp uygulamasını açın:  
+   👉 **Ayarlar > Bağlı Cihazlar > Cihaz Bağla** adımlarını izleyin ve UltraMsg ekranında beliren **QR Kodu** telefonunuza okutun.  
+   *(Ekranda "Connected" yazdığı an sisteminiz WhatsApp mesajı göndermeye hazırdır).*
+
+### 2. Booking.com iCal Linki (.ics) Nasıl Alınır?
+1. [Booking.com Extranet](https://admin.booking.com) hesabınıza giriş yapın.
+2. Üst menüden **Fiyatlar ve Kontenjan > Takvimleri Senkronize Et** sayfasına gidin.
+3. İlgili odanın/süitin altında bulunan **"Takvimi Dışa Aktar" (Export Calendar)** butonuna tıklayın.
+4. Ekrana gelen `https://ical.booking.com/v1/export?t=...` formatındaki **.ics takvim bağlantısını kopyalayın**.
+5. Bu linki web panelinizdeki **"Booking iCal Linki"** alanına yapıştırın.
+
+---
+
 ## ⚙️ Servis Yönetimi
 
 ```bash
