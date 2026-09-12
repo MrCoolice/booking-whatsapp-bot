@@ -32,28 +32,55 @@ graph TD
 
 ---
 
-## 🚀 Hızlı Kurulum (Proxmox LXC / Ubuntu / Debian)
+## 🚀 Hızlı Kurulum
 
-### 1. Depoyu Klonlayın
+### 1. Adım: Proxmox'ta LXC Konteyneri Oluşturma (1 Dakika)
+
+Proxmox arayüzünüzden (`https://<proxmox-ip>:8006`) sağ üstteki **"Create CT"** butonuna basarak hafif bir Linux konteyneri açın:
+- **Hostname:** `booking-bot` (veya dilediğiniz bir isim)
+- **Template:** `Debian 12` veya `Debian 13` (veya `Ubuntu 22.04 / 24.04`)
+- **Disk:** `4 GB` veya `8 GB`
+- **CPU:** `1 Core`
+- **RAM:** `512 MB` *(Bot oldukça hafiftir, arka planda sadece ~70-80 MB RAM tüketir)*
+- **Network:** `DHCP` (veya statik yerel IP)
+
+Konteyneri oluşturduktan sonra **"Start"** butonuna basıp **">_ Console"** sekmesini açın.
+
+---
+
+### 2. Adım: Gerekli Paketleri Yükleyin ve Depoyu Klonlayın
+
+Konteyner konsolunda şu komutları çalıştırın:
+
 ```bash
+# Temel sistem paketlerini yükleyin
+apt update -y && apt install -y git python3 python3-pip python3-venv
+
+# Projeyi klonlayın ve klasöre girin
 git clone https://github.com/MrCoolice/booking-whatsapp-bot.git /opt/dalaman-suite-bot
 cd /opt/dalaman-suite-bot
 ```
 
-### 2. Otomatik Kurulum Scriptini Çalıştırın
+---
+
+### 3. Adım: Otomatik Kurulum Scriptini Çalıştırın
+
 ```bash
 chmod +x install.sh
 ./install.sh
 ```
 
 Script otomatik olarak:
-- Python sanal ortamını (`venv`) kurar,
-- Gerekli kütüphaneleri (`fastapi`, `uvicorn`, `apscheduler`, `requests`) yükler,
-- `dalaman-bot.service` dosyasını Linux systemd servislerine kaydedip arka planda başlatır.
+- İzole Python sanal ortamını (`venv`) oluşturur,
+- Gerekli kütüphaneleri (`fastapi`, `uvicorn`, `apscheduler`, `requests`, `python-multipart`, `jinja2`) yükler,
+- `dalaman-bot.service` dosyasını Linux systemd servislerine kaydedip 7/24 arka planda otomatik çalışacak şekilde başlatır.
 
-### 3. Web Paneline Giriş Yapın
-Tarayıcınızdan şu adrese gidin:  
-👉 **`http://<SUNUCU-IP>:8000`**
+---
+
+### 4. Adım: Web Paneline Giriş Yapın ve Kullanmaya Başlayın
+
+Kurulum bittiğinde ekranda beliren IP adresiyle tarayıcınızdan panele gidin:  
+👉 **`http://<KONTEYNER-IP>:8000`**
 
 Paneldeki **Sistem Ayarları** bölümünden:
 1. **Tesis / Oda Adı**
