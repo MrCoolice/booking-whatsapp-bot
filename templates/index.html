@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dalaman Airport Suite - Rezervasyon & WhatsApp Botu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+    <!-- Üst Bar -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-emerald-500 p-2.5 rounded-xl shadow-md">
+                    <i class="fa-solid fa-hotel text-xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">{{ config.suite_name }}</h1>
+                    <p class="text-xs text-slate-400">Proxmox Booking.com & WhatsApp Otomasyonu</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2 sm:gap-3">
+                <span class="bg-slate-800 border border-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5">
+                    <i class="fa-regular fa-calendar"></i> {{ today_display }}
+                </span>
+                <button onclick="syncNow()" class="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
+                    <i class="fa-solid fa-arrows-rotate"></i> Şimdi Eşle
+                </button>
+                <button onclick="testWhatsApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
+                    <i class="fa-brands fa-whatsapp"></i> Test Gönder
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Ana İçerik -->
+    <main class="max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+        
+        <!-- Bildirim Alanı -->
+        <div id="alertBox" class="hidden p-4 rounded-xl text-sm font-medium transition-all duration-300"></div>
+
+        <!-- Günün Durum Kartları -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Bugün Çıkışlar -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-3 h-3 rounded-full bg-rose-500 animate-pulse"></span>
+                        <h2 class="text-base font-bold text-slate-900">Bugün Çıkış (Check-out) Yapacaklar</h2>
+                    </div>
+                    <span class="bg-rose-50 text-rose-700 text-xs px-2.5 py-1 rounded-full font-bold">{{ today_checkouts|length }} Oda</span>
+                </div>
+
+                {% if today_checkouts %}
+                    <div class="space-y-3">
+                        {% for item in today_checkouts %}
+                        <div class="p-3.5 bg-rose-50/60 border border-rose-100 rounded-xl flex justify-between items-center">
+                            <div>
+                                <p class="text-sm font-bold text-slate-800">{{ config.suite_name }}</p>
+                                <p class="text-xs text-slate-500">Giriş: {{ item.checkin }} ➔ Çıkış: {{ item.checkout }}</p>
+                            </div>
+                            <span class="bg-rose-100 text-rose-800 text-xs px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1">
+                                <i class="fa-solid fa-broom"></i> Temizlik Bekliyor
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="py-6 text-center text-slate-400 text-sm">
+                        <i class="fa-regular fa-circle-check text-2xl mb-1 text-slate-300 block"></i>
+                        Bugün için çıkış yapacak oda bulunmuyor.
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Bugün Girişler -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                        <h2 class="text-base font-bold text-slate-900">Bugün Giriş (Check-in) Yapacaklar</h2>
+                    </div>
+                    <span class="bg-emerald-50 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-bold">{{ today_checkins|length }} Oda</span>
+                </div>
+
+                {% if today_checkins %}
+                    <div class="space-y-3">
+                        {% for item in today_checkins %}
+                        <div class="p-3.5 bg-emerald-50/60 border border-emerald-100 rounded-xl flex justify-between items-center">
+                            <div>
+                                <p class="text-sm font-bold text-slate-800">{{ config.suite_name }}</p>
+                                <p class="text-xs text-slate-500">Giriş: {{ item.checkin }} ➔ Çıkış: {{ item.checkout }}</p>
+                            </div>
+                            <span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1">
+                                <i class="fa-solid fa-key"></i> Giriş Bekleniyor
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="py-6 text-center text-slate-400 text-sm">
+                        <i class="fa-solid fa-bed text-2xl mb-1 text-slate-300 block"></i>
+                        Bugün yeni giriş yapacak misafir yok.
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- Rezervasyonlar & Ayarlar Bölümü -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Sol Taraf: Rezervasyon Listesi ve Sistem Olay Günlüğü (2 Kolon) -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Rezervasyon Listesi -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between border-b pb-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">Aktif Rezervasyon Listesi</h2>
+                            <p class="text-xs text-slate-500">Booking takviminden çekilen en son 50 rezervasyon</p>
+                        </div>
+                        <span class="text-xs font-semibold bg-slate-100 px-3 py-1 rounded-lg text-slate-600">
+                            {{ reservations|length }} Kayıt
+                        </span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                                <tr class="text-xs uppercase text-slate-400 border-b">
+                                    <th class="py-3 px-2">Giriş Tarihi</th>
+                                    <th class="py-3 px-2">Çıkış Tarihi</th>
+                                    <th class="py-3 px-2">Durum</th>
+                                    <th class="py-3 px-2">Kayıt Zamanı</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                {% for r in reservations %}
+                                <tr class="hover:bg-slate-50/80 transition">
+                                    <td class="py-3 px-2 font-semibold text-slate-800">{{ r.checkin }}</td>
+                                    <td class="py-3 px-2 font-semibold text-slate-800">{{ r.checkout }}</td>
+                                    <td class="py-3 px-2">
+                                        {% if r.status == 'Konaklıyor' %}
+                                            <span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Konaklıyor</span>
+                                        {% elif r.status == 'Bugün Giriş' %}
+                                            <span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Bugün Giriş</span>
+                                        {% elif r.status == 'Bugün Çıkış' %}
+                                            <span class="bg-rose-100 text-rose-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Bugün Çıkış</span>
+                                        {% elif r.status == 'Gelecek' %}
+                                            <span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Gelecek</span>
+                                        {% else %}
+                                            <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-0.5 rounded-full font-medium">Çıkış Yaptı</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3 px-2 text-xs text-slate-400">{{ r.created_at }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Canlı Sistem Olay Günlüğü (Rezervasyonların Altında) -->
+                <div class="bg-slate-900 text-slate-300 rounded-2xl p-6 shadow-sm">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-terminal text-emerald-400"></i> Sistem Olay Günlüğü (Son 15 İşlem)
+                        </h3>
+                        <span class="text-xs text-slate-500">Canlı Veri</span>
+                    </div>
+                    <div class="space-y-2 text-xs font-mono max-h-56 overflow-y-auto">
+                        {% for log in logs %}
+                        <div class="flex items-start gap-3">
+                            <span class="text-slate-500 shrink-0">{{ log.time }}</span>
+                            {% if log.status == 'success' %}
+                                <span class="text-emerald-400 font-semibold shrink-0">[BAŞARILI]</span>
+                            {% elif log.status == 'error' %}
+                                <span class="text-rose-400 font-semibold shrink-0">[HATA]</span>
+                            {% else %}
+                                <span class="text-blue-400 font-semibold shrink-0">[BİLGİ]</span>
+                            {% endif %}
+                            <span class="text-slate-300 break-words">{{ log.msg }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sağ Taraf: Ayarlar Formu (1 Kolon) -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4 h-fit">
+                <div class="border-b pb-3">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-slate-500"></i> Sistem Ayarları & Şablonlar
+                    </h2>
+                    <p class="text-xs text-slate-500">WhatsApp Numaraları, Saatler ve Özel Mesajlar</p>
+                </div>
+
+                <form id="settingsForm" onsubmit="saveSettings(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tesis / Oda Adı</label>
+                        <input type="text" name="suite_name" value="{{ config.suite_name }}" required
+                               class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">WhatsApp Numaraları / Grup</label>
+                        <input type="text" name="phone_numbers" value="{{ config.phone_numbers }}" required
+                               class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <p class="text-[11px] text-slate-400 mt-1">Aralarına virgül koyun: <code>+90542...,+90532...</code> veya Grup ID</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Sabah Hatırlatma Saati</label>
+                        <input type="time" name="morning_time" value="{{ config.morning_time }}" required
+                               class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <p class="text-[11px] text-slate-400 mt-1">Giriş ve Çıkış mesajları bu saatte atılır.</p>
+                    </div>
+
+                    <!-- Özel Mesaj Şablonları Bölümü -->
+                    <div class="border-t pt-3 space-y-3">
+                        <p class="text-xs font-bold text-slate-800 uppercase flex items-center gap-1.5">
+                            <i class="fa-regular fa-message text-emerald-500"></i> Özel Mesaj Şablonları
+                        </p>
+                        <p class="text-[11px] text-slate-500">Metinlerde <code>{suite_name}</code>, <code>{checkin}</code>, <code>{checkout}</code> etiketlerini kullanabilirsiniz.</p>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">🛎 Yeni Rezervasyon Mesajı</label>
+                            <textarea name="msg_new_booking" rows="3" class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">{{ config.msg_new_booking }}</textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">🏨 Giriş (Check-in) Hatırlatma Mesajı</label>
+                            <textarea name="msg_checkin" rows="3" class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">{{ config.msg_checkin }}</textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">🧹 Çıkış (Check-out) Hatırlatma Mesajı</label>
+                            <textarea name="msg_checkout" rows="3" class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">{{ config.msg_checkout }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="border-t pt-3">
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Booking iCal Linki (.ics)</label>
+                        <input type="text" name="ical_url" value="{{ config.ical_url }}" required
+                               class="w-full px-3 py-2 border rounded-xl text-xs font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">UltraMsg Instance</label>
+                            <input type="text" name="ultramsg_instance" value="{{ config.ultramsg_instance }}" required
+                                   class="w-full px-3 py-2 border rounded-xl text-xs font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">UltraMsg Token</label>
+                            <input type="text" name="ultramsg_token" value="{{ config.ultramsg_token }}" required
+                                   class="w-full px-3 py-2 border rounded-xl text-xs font-mono focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check"></i> Tüm Ayarları ve Şablonları Kaydet
+                    </button>
+                </form>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        function showAlert(msg, isSuccess = true) {
+            const box = document.getElementById('alertBox');
+            box.className = isSuccess 
+                ? 'p-4 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-800 border border-emerald-200 block'
+                : 'p-4 rounded-xl text-sm font-medium bg-rose-50 text-rose-800 border border-rose-200 block';
+            box.innerText = msg;
+            setTimeout(() => { box.className = 'hidden'; }, 5000);
+        }
+
+        async function saveSettings(e) {
+            e.preventDefault();
+            const form = document.getElementById('settingsForm');
+            const data = new FormData(form);
+            try {
+                const res = await fetch('/api/settings', { method: 'POST', body: data });
+                const json = await res.json();
+                showAlert(json.message, json.status === 'ok');
+            } catch (err) {
+                showAlert('Ayarlar kaydedilirken hata oluştu: ' + err, false);
+            }
+        }
+
+        async function syncNow() {
+            try {
+                const res = await fetch('/api/sync-now', { method: 'POST' });
+                const json = await res.json();
+                showAlert(json.message, json.status === 'ok');
+                setTimeout(() => location.reload(), 1500);
+            } catch (err) {
+                showAlert('Senkronizasyon hatası: ' + err, false);
+            }
+        }
+
+        async function testWhatsApp() {
+            try {
+                showAlert('WhatsApp test mesajı gönderiliyor...', true);
+                const res = await fetch('/api/test-whatsapp', { method: 'POST' });
+                const json = await res.json();
+                showAlert(json.message, json.status === 'ok');
+            } catch (err) {
+                showAlert('Test başarısız: ' + err, false);
+            }
+        }
+    </script>
+</body>
+</html>

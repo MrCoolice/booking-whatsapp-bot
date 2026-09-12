@@ -1,0 +1,13 @@
+[Unit]
+Description=Dalaman Airport Suite Booking & WhatsApp Bot
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/opt/dalaman-suite-bot
+ExecStart=/opt/dalaman-suite-bot/venv/bin/python main.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

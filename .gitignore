@@ -1,0 +1,18 @@
+﻿# Database & Secrets
+bot_database.db
+*.db
+.env
+
+# Python & Virtualenv
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# OS & Editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
