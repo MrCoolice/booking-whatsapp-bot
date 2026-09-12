@@ -1,4 +1,142 @@
-# 🏨 Booking.com WhatsApp & KBS Otomasyon Botu (Self-Hosted)
+# 🏨 Booking.com WhatsApp & Legal Compliance (KBS) Automation Bot (Self-Hosted)
+
+> 🌐 **Language / Dil:** [🇬🇧 English](#-english) | [🇹🇷 Türkçe](#-türkçe)  
+> *English documentation is at the top. Türkçe açıklamalar sayfanın alt kısmında yer almaktadır.*
+
+---
+
+# 🇬🇧 English
+
+A 100% **self-hosted**, lightweight, and automated bot designed for hotels, apartments, boutique villas, and short-term rentals. It monitors your **Booking.com** reservations 24/7 via iCal, notifies you instantly on WhatsApp for new bookings, and sends morning Check-in / Check-out reminders with legal police/identity reporting compliance notices (**Turkish KBS / Police Notification System**).
+
+---
+
+## 🌟 Key Features
+
+- 🛎 **Instant Booking Alerts:** Automatically polls the Booking.com iCal feed every 2 minutes. When a new reservation arrives, it sends an immediate WhatsApp notification to the host, reception, or staff group.
+- 🚨 **Legal Compliance & Police (KBS) Reminders:** 
+  - Morning Check-in alert (`09:00` by default): Reminds staff of key handover and mandatory police guest registration.
+  - Morning Check-out alert: Reminds staff to start housekeeping and file the police check-out notification.
+- 🌐 **Modern & Responsive Web Dashboard:** Accessible at `http://<IP>:8000`, built with Tailwind CSS, showing today's arrivals, departures, live logs, and active reservations.
+- 🕒 **Smart Status Transition:** On check-out day, the reservation badge shows *"Check-out Today"* before 11:00 AM, and automatically turns into *"Checked Out"* after standard check-out time (11:00 AM).
+- 📱 **Multi-Number & WhatsApp Group Support:** Delivers alerts to multiple comma-separated phone numbers (`+905...,+905...`) or directly to a shared WhatsApp staff group.
+- ✏️ **Customizable Message Templates:** Edit WhatsApp notification templates (`{suite_name}`, `{checkin}`, `{checkout}`) directly from the web dashboard with a single click.
+- 💾 **Persistent SQLite Database:** Retains state across server reboots, ensuring no duplicate messages are ever sent.
+- 🚀 **Zero Cloud Subscription Fees:** Runs entirely on your own local server (Proxmox LXC, Raspberry Pi, or Linux VPS) with no monthly quotas (unlike Make.com or Zapier).
+
+---
+
+## 🏗️ Architecture Diagram
+
+```mermaid
+graph TD
+    A[Booking.com iCal Calendar] -->|Polling Every 2 Minutes| B(FastAPI Python Service)
+    B -->|State & Settings Storage| C[(SQLite Database)]
+    B -->|Morning Reminders & New Bookings| D[UltraMsg WhatsApp Gateway]
+    D -->|Instant Notifications| E[Host & Staff WhatsApp Phones]
+    F[Administrator / User] <-->|Web Dashboard :8000| B
+```
+
+---
+
+## 🚀 Quick Start & Installation
+
+### Step 1: Create a Proxmox LXC Container (1 Minute)
+From your Proxmox web interface (`https://<proxmox-ip>:8006`), click **"Create CT"**:
+- **Hostname:** `booking-bot`
+- **Template:** `Debian 12` or `Debian 13` (or `Ubuntu 22.04 / 24.04`)
+- **Disk:** `4 GB` or `8 GB`
+- **CPU:** `1 Core`
+- **RAM:** `512 MB` *(The bot consumes only ~70-80 MB of RAM)*
+- **Network:** `DHCP` (or static local IP)
+
+Start the container and open the **">_ Console"** tab.
+
+---
+
+### Step 2: Install Packages & Clone the Repository
+Inside the container console, run:
+
+```bash
+# Update and install required packages
+apt update -y && apt install -y git python3 python3-pip python3-venv
+
+# Clone this repository and enter the directory
+git clone https://github.com/MrCoolice/booking-whatsapp-bot.git /opt/dalaman-suite-bot
+cd /opt/dalaman-suite-bot
+```
+
+---
+
+### Step 3: Run the 1-Click Installer Script
+
+```bash
+chmod +x install.sh
+./install.sh
+```
+
+The script automatically:
+- Creates an isolated Python virtual environment (`venv`),
+- Installs dependencies (`fastapi`, `uvicorn`, `apscheduler`, `requests`, `python-multipart`, `jinja2`),
+- Configures and starts the systemd service (`dalaman-bot.service`) to run 24/7 in the background.
+
+---
+
+### Step 4: Open the Web Dashboard & Configure
+
+Open your browser and navigate to:  
+👉 **`http://<CONTAINER-IP>:8000`**
+
+In the **System Settings** section on the right:
+1. Enter your **Property / Suite Name**
+2. Enter your **WhatsApp Number(s)** (e.g., `+90542XXXXXXX`)
+3. Enter your **UltraMsg Instance ID & Token**
+4. Paste your **Booking.com iCal Link** (.ics)
+5. Click **"Save All Settings & Templates"**.
+
+---
+
+## 🔑 Configuration Guide
+
+### How to Get Your UltraMsg Instance ID & Token:
+1. Go to [UltraMsg.com](https://ultramsg.com) and create an account.
+2. In the dashboard, click **"Add Instance"** to create a WhatsApp instance.
+3. Copy the generated **Instance ID** (e.g., `instance123456`) and **Token**.
+4. Open WhatsApp on your phone: navigate to **Settings > Linked Devices > Link a Device**, and scan the QR code displayed on UltraMsg.  
+   *(Once it shows "Connected", your WhatsApp gateway is active).*
+
+### How to Get Your Booking.com iCal Export Link:
+1. Log in to [Booking.com Extranet](https://admin.booking.com).
+2. Go to **Rates & Availability > Sync Calendars**.
+3. Under the desired room/suite, click **"Export Calendar"**.
+4. Copy the provided `.ics` URL (e.g., `https://ical.booking.com/v1/export?t=...`).
+5. Paste this URL into the **"Booking iCal Link"** field in the bot's web dashboard.
+
+---
+
+## ⚙️ Service Management
+
+```bash
+# Check service status
+systemctl status dalaman-bot
+
+# Restart service
+systemctl restart dalaman-bot
+
+# Stop service
+systemctl stop dalaman-bot
+
+# View live real-time logs
+journalctl -u dalaman-bot -f
+```
+
+---
+
+<br><br>
+
+---
+
+# 🇹🇷 Türkçe
 
 Otel, apart, villa ve butik konaklama tesisleri için geliştirilmiş; **Booking.com** rezervasyonlarını 7/24 izleyen, yeni rezervasyonları ve günlük Check-in / Check-out hatırlatmalarını yasal **KBS / Polis Kimlik Bildirimi uyarısıyla** birlikte WhatsApp üzerinden ileten, **%100 yerel (self-hosted)** otomasyon platformu.
 
@@ -35,9 +173,8 @@ graph TD
 ## 🚀 Hızlı Kurulum
 
 ### 1. Adım: Proxmox'ta LXC Konteyneri Oluşturma (1 Dakika)
-
 Proxmox arayüzünüzden (`https://<proxmox-ip>:8006`) sağ üstteki **"Create CT"** butonuna basarak hafif bir Linux konteyneri açın:
-- **Hostname:** `booking-bot` (veya dilediğiniz bir isim)
+- **Hostname:** `booking-bot`
 - **Template:** `Debian 12` veya `Debian 13` (veya `Ubuntu 22.04 / 24.04`)
 - **Disk:** `4 GB` veya `8 GB`
 - **CPU:** `1 Core`
@@ -49,8 +186,6 @@ Konteyneri oluşturduktan sonra **"Start"** butonuna basıp **">_ Console"** sek
 ---
 
 ### 2. Adım: Gerekli Paketleri Yükleyin ve Depoyu Klonlayın
-
-Konteyner konsolunda şu komutları çalıştırın:
 
 ```bash
 # Temel sistem paketlerini yükleyin
