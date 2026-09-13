@@ -1,0 +1,17 @@
+{
+  "name": "dalaman-whatsapp-gateway",
+  "version": "1.0.0",
+  "description": "100% Free Self-Hosted WhatsApp Web Gateway for Dalaman Airport Suite Bot",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.14",
+    "express": "^4.19.2",
+    "qrcode": "^1.5.3",
+    "pino": "^9.0.0"
+  },
+  "author": "GölgeSiber",
+  "license": "MIT"
+}

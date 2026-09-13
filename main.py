@@ -83,34 +83,58 @@ def add_log(message, status="info"):
 
 def send_whatsapp(body_text):
     cfg = get_settings()
-    instance = cfg.get("ultramsg_instance")
-    token = cfg.get("ultramsg_token")
     raw_phones = cfg.get("phone_numbers", "")
     phones = [p.strip() for p in raw_phones.split(",") if p.strip()]
     
-    if not instance or not token or not phones:
-        add_log("WhatsApp gonderilemedi: Eksik ayarlar!", "error")
+    if not phones:
+        add_log("WhatsApp gönderilemedi: Telefon numarası girilmemiş!", "error")
         return False
         
-    url = f"https://api.ultramsg.com/{instance}/messages/chat"
+    local_gateway_url = "http://127.0.0.1:3000/send"
     success_count = 0
     
     for phone in phones:
-        payload = {
-            "token": token,
-            "to": phone,
-            "body": body_text,
-            "priority": "10"
-        }
+        sent_local = False
+        # 1. Öncelik: Kendi Yerel Baileys Gateway'imiz (Sıfır Ücret & Kalıcı)
         try:
-            r = requests.post(url, data=payload, timeout=15)
+            r = requests.post(local_gateway_url, json={"phone": phone, "message": body_text}, timeout=10)
             if r.status_code == 200:
                 success_count += 1
-                add_log(f"WhatsApp gonderildi -> {phone}", "success")
+                sent_local = True
+                add_log(f"WhatsApp gönderildi (Yerel Gateway) -> {phone}", "success")
             else:
-                add_log(f"WhatsApp hata ({phone}): {r.text}", "error")
-        except Exception as e:
-            add_log(f"WhatsApp baglanti hatasi ({phone}): {str(e)}", "error")
+                err_data = r.text
+                try:
+                    err_data = r.json().get("error", err_data)
+                except:
+                    pass
+                add_log(f"Yerel Gateway ({phone}): {err_data}", "info")
+        except Exception:
+            pass
+            
+        # 2. Öncelik: Eğer Yerel Gateway bağlı değilse ve UltraMsg ayarları varsa yedek olarak dene
+        if not sent_local:
+            instance = cfg.get("ultramsg_instance")
+            token = cfg.get("ultramsg_token")
+            if instance and token:
+                url = f"https://api.ultramsg.com/{instance}/messages/chat"
+                payload = {
+                    "token": token,
+                    "to": phone,
+                    "body": body_text,
+                    "priority": "10"
+                }
+                try:
+                    r2 = requests.post(url, data=payload, timeout=15)
+                    if r2.status_code == 200:
+                        success_count += 1
+                        add_log(f"WhatsApp gönderildi (UltraMsg Yedek) -> {phone}", "success")
+                    else:
+                        add_log(f"UltraMsg hata ({phone}): {r2.text}", "error")
+                except Exception as e2:
+                    add_log(f"UltraMsg bağlantı hatası ({phone}): {str(e2)}", "error")
+            else:
+                add_log(f"WhatsApp gönderilemedi ({phone}): Yerel Gateway bağlı değil! Lütfen web panelinden QR kodu okutun.", "error")
             
     return success_count > 0
 
@@ -351,6 +375,22 @@ async def manual_sync():
     sync_calendar()
     check_daily_reminders()
     return JSONResponse({"status": "ok", "message": "Takvim hemen senkronize edildi ve kontroller yapıldı."})
+
+@app.get("/api/whatsapp/status")
+async def wa_gateway_status():
+    try:
+        r = requests.get("http://127.0.0.1:3000/status", timeout=2)
+        return JSONResponse(r.json())
+    except Exception:
+        return JSONResponse({"status": "offline", "phone": None, "hasQr": False})
+
+@app.get("/api/whatsapp/qr")
+async def wa_gateway_qr():
+    try:
+        r = requests.get("http://127.0.0.1:3000/qr", timeout=2)
+        return JSONResponse(r.json())
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": str(e)})
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,0 +1,16 @@
+[Unit]
+Description=Dalaman Suite Local WhatsApp Gateway (Baileys)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/dalaman-suite-bot/gateway
+ExecStart=/usr/bin/node /opt/dalaman-suite-bot/gateway/server.js
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
