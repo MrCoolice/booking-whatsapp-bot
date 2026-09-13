@@ -43,8 +43,6 @@ def init_db():
     
     defaults = {
         "ical_url": os.getenv("ICAL_URL", ""),
-        "ultramsg_instance": os.getenv("ULTRAMSG_INSTANCE", ""),
-        "ultramsg_token": os.getenv("ULTRAMSG_TOKEN", ""),
         "phone_numbers": os.getenv("PHONE_NUMBERS", ""),
         "morning_time": "09:00",
         "suite_name": "Dalaman Airport Suite 11",
@@ -94,47 +92,20 @@ def send_whatsapp(body_text):
     success_count = 0
     
     for phone in phones:
-        sent_local = False
-        # 1. Öncelik: Kendi Yerel Baileys Gateway'imiz (Sıfır Ücret & Kalıcı)
         try:
             r = requests.post(local_gateway_url, json={"phone": phone, "message": body_text}, timeout=10)
             if r.status_code == 200:
                 success_count += 1
-                sent_local = True
-                add_log(f"WhatsApp gönderildi (Yerel Gateway) -> {phone}", "success")
+                add_log(f"WhatsApp gönderildi -> {phone}", "success")
             else:
                 err_data = r.text
                 try:
                     err_data = r.json().get("error", err_data)
                 except:
                     pass
-                add_log(f"Yerel Gateway ({phone}): {err_data}", "info")
-        except Exception:
-            pass
-            
-        # 2. Öncelik: Eğer Yerel Gateway bağlı değilse ve UltraMsg ayarları varsa yedek olarak dene
-        if not sent_local:
-            instance = cfg.get("ultramsg_instance")
-            token = cfg.get("ultramsg_token")
-            if instance and token:
-                url = f"https://api.ultramsg.com/{instance}/messages/chat"
-                payload = {
-                    "token": token,
-                    "to": phone,
-                    "body": body_text,
-                    "priority": "10"
-                }
-                try:
-                    r2 = requests.post(url, data=payload, timeout=15)
-                    if r2.status_code == 200:
-                        success_count += 1
-                        add_log(f"WhatsApp gönderildi (UltraMsg Yedek) -> {phone}", "success")
-                    else:
-                        add_log(f"UltraMsg hata ({phone}): {r2.text}", "error")
-                except Exception as e2:
-                    add_log(f"UltraMsg bağlantı hatası ({phone}): {str(e2)}", "error")
-            else:
-                add_log(f"WhatsApp gönderilemedi ({phone}): Yerel Gateway bağlı değil! Lütfen web panelinden QR kodu okutun.", "error")
+                add_log(f"WhatsApp gönderilemedi ({phone}): {err_data}", "error")
+        except Exception as e:
+            add_log(f"WhatsApp Gateway bağlantı hatası ({phone}): {str(e)}", "error")
             
     return success_count > 0
 
@@ -340,8 +311,6 @@ async def save_settings(
     phone_numbers: str = Form(...),
     morning_time: str = Form(...),
     ical_url: str = Form(...),
-    ultramsg_instance: str = Form(...),
-    ultramsg_token: str = Form(...),
     msg_new_booking: str = Form(...),
     msg_checkin: str = Form(...),
     msg_checkout: str = Form(...)
@@ -350,8 +319,6 @@ async def save_settings(
     update_setting("phone_numbers", phone_numbers.strip())
     update_setting("morning_time", morning_time.strip())
     update_setting("ical_url", ical_url.strip())
-    update_setting("ultramsg_instance", ultramsg_instance.strip())
-    update_setting("ultramsg_token", ultramsg_token.strip())
     update_setting("msg_new_booking", msg_new_booking.strip())
     update_setting("msg_checkin", msg_checkin.strip())
     update_setting("msg_checkout", msg_checkout.strip())

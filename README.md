@@ -26,7 +26,6 @@ Includes a built-in **100% Free Self-Hosted WhatsApp Web Gateway (Baileys)**: no
 - ✏️ **Customizable Message Templates:** Edit WhatsApp notification templates (`{suite_name}`, `{checkin}`, `{checkout}`) directly from the web dashboard with a single click.
 - 💾 **Persistent SQLite Database:** Retains state across server reboots, ensuring no duplicate messages are ever sent.
 - 🚀 **Zero Cloud Subscription Fees:** Runs entirely on your own local server (Proxmox LXC, Raspberry Pi, or Linux VPS) with no monthly quotas (unlike Make.com or Zapier).
-- 🛡️ **Optional UltraMsg Fallback:** If you prefer UltraMsg or want an automatic cloud fallback if your local phone disconnects, both can coexist seamlessly.
 
 ---
 
@@ -36,9 +35,8 @@ Includes a built-in **100% Free Self-Hosted WhatsApp Web Gateway (Baileys)**: no
 graph TD
     A[Booking.com iCal Calendar] -->|Polling Every 2 Minutes| B(FastAPI Python Service :8000)
     B -->|State & Reservation DB| C[(SQLite Database)]
-    B -->|1st Priority: Outgoing Messages| D[Local Baileys WhatsApp Gateway :3000]
+    B -->|Outgoing Messages| D[Local Baileys WhatsApp Gateway :3000]
     D -->|WhatsApp Web Protocol| E[Host & Staff WhatsApp Phones]
-    B -.->|2nd Priority: Optional Cloud Fallback| F[UltraMsg API]
     G[Web Dashboard UI :8000] <-->|Interactive QR Code Modal| D
     G <-->|Management & Live Logs| B
 ```
@@ -166,7 +164,6 @@ Sistem, bünyesinde barındırdığı **%100 Ücretsiz Yerel WhatsApp Gateway (B
 - ✏️ **Dinamik Mesaj Şablonları:** WhatsApp mesaj şablonlarını (`{suite_name}`, `{checkin}`, `{checkout}`) web arayüzünden tek tıkla özelleştirebilme.
 - 💾 **Kalıcı SQLite Hafızası:** Sunucu yeniden başlasa bile veriler kaybolmaz, aynı rezervasyon için mükerrer mesaj atmaz.
 - 🚀 **Sıfır Bulut Maliyeti:** Make.com veya Zapier gibi aylık kota sınırlaması olan servisler yerine kendi Proxmox sunucunuzda ücretsiz çalışır.
-- 🛡️ **UltraMsg Yedekleme Desteği:** İsteğe bağlı olarak UltraMsg bilgilerinizi de tanımlayabilirsiniz; yerel gateway bağlantısı kesilirse sistem otomatik olarak UltraMsg üzerinden mesajı göndermeyi dener.
 
 ---
 
@@ -176,9 +173,8 @@ Sistem, bünyesinde barındırdığı **%100 Ücretsiz Yerel WhatsApp Gateway (B
 graph TD
     A[Booking.com iCal Takvimi] -->|2 Dakikada Bir Polling| B(FastAPI Python Servisi :8000)
     B -->|Durum & Rezervasyon DB| C[(SQLite Veritabanı)]
-    B -->|1. Öncelik: Mesaj Gönderimi| D[Yerel Baileys WhatsApp Gateway :3000]
+    B -->|Mesaj Gönderimi| D[Yerel Baileys WhatsApp Gateway :3000]
     D -->|WhatsApp Web Protokolü| E[Yönetici & Resepsiyon Telefonları]
-    B -.->|2. Öncelik: Opsiyonel Bulut Yedek| F[UltraMsg API]
     G[Web Dashboard Paneli :8000] <-->|Canlı QR Kod Modalı| D
     G <-->|Yönetim & Canlı Loglar| B
 ```
