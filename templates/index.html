@@ -133,14 +133,29 @@
                 {% if today_checkins %}
                     <div class="space-y-3">
                         {% for item in today_checkins %}
-                        <div class="p-3.5 bg-emerald-50/60 border border-emerald-100 rounded-xl flex justify-between items-center">
-                            <div>
-                                <p class="text-sm font-bold text-slate-800">{{ config.suite_name }}</p>
-                                <p class="text-xs text-slate-500">Giriş: {{ item.checkin }} ➔ Çıkış: {{ item.checkout }}</p>
+                        <div class="p-4 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl space-y-3 shadow-xs">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="text-sm font-bold text-slate-900">{{ config.suite_name }}</p>
+                                    <p class="text-xs text-slate-500 font-medium">Giriş: {{ item.checkin }} ➔ Çıkış: {{ item.checkout }}</p>
+                                </div>
+                                <span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1">
+                                    <i class="fa-solid fa-key"></i> Giriş Bekleniyor
+                                </span>
                             </div>
-                            <span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1">
-                                <i class="fa-solid fa-key"></i> Giriş Bekleniyor
-                            </span>
+                            
+                            <!-- Misafir Karşılama Alanı -->
+                            <div class="pt-2.5 border-t border-emerald-200/60 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                <div class="relative flex-1">
+                                    <i class="fa-solid fa-phone text-emerald-600 absolute left-3 top-2.5 text-xs"></i>
+                                    <input type="text" id="phone_in_{{ loop.index }}" value="{{ item.guest_phone }}" placeholder="Misafir WhatsApp No (+905...)"
+                                           class="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 font-mono">
+                                </div>
+                                <button onclick="sendWelcome('{{ item.uid }}', 'phone_in_{{ loop.index }}')" 
+                                        class="{% if item.notified_welcome %}bg-slate-800 hover:bg-slate-700 text-slate-200{% else %}bg-emerald-600 hover:bg-emerald-500 text-white{% endif %} px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm whitespace-nowrap cursor-pointer">
+                                    <i class="fa-brands fa-whatsapp text-emerald-400"></i> {% if item.notified_welcome %}Tekrar Gönder{% else %}Karşılama & Wi-Fi Gönder{% endif %}
+                                </button>
+                            </div>
                         </div>
                         {% endfor %}
                     </div>
@@ -178,6 +193,7 @@
                                     <th class="py-3 px-2">Giriş Tarihi</th>
                                     <th class="py-3 px-2">Çıkış Tarihi</th>
                                     <th class="py-3 px-2">Durum</th>
+                                    <th class="py-3 px-2">Misafir & Karşılama</th>
                                     <th class="py-3 px-2">Kayıt Zamanı</th>
                                 </tr>
                             </thead>
@@ -198,6 +214,16 @@
                                         {% else %}
                                             <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-0.5 rounded-full font-medium">Çıkış Yaptı</span>
                                         {% endif %}
+                                    </td>
+                                    <td class="py-2.5 px-2">
+                                        <div class="flex items-center gap-1.5">
+                                            <input type="text" id="phone_res_{{ loop.index }}" value="{{ r.guest_phone }}" placeholder="+905..." 
+                                                   class="w-28 sm:w-32 px-2 py-1 text-xs border border-slate-300 rounded-lg outline-none focus:ring-1 focus:ring-emerald-500 font-mono bg-white">
+                                            <button onclick="sendWelcome('{{ r.uid }}', 'phone_res_{{ loop.index }}')" title="Karşılama / Wi-Fi Mesajı Gönder"
+                                                    class="{% if r.notified_welcome %}bg-slate-800 hover:bg-slate-700 text-slate-300{% else %}bg-emerald-600 hover:bg-emerald-500 text-white{% endif %} text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1 transition shadow-xs whitespace-nowrap cursor-pointer">
+                                                <i class="fa-brands fa-whatsapp text-emerald-400"></i> {% if r.notified_welcome %}İletildi ✓{% else %}Karşıla{% endif %}
+                                            </button>
+                                        </div>
                                     </td>
                                     <td class="py-3 px-2 text-xs text-slate-400">{{ r.created_at }}</td>
                                 </tr>
@@ -263,12 +289,62 @@
                         <p class="text-[11px] text-slate-400 mt-1">Giriş ve Çıkış mesajları bu saatte atılır.</p>
                     </div>
 
+                    <!-- Wi-Fi ve Karşılama Ayarları Bölümü -->
+                    <div class="border-t pt-3 space-y-3">
+                        <p class="text-xs font-bold text-slate-800 uppercase flex items-center gap-1.5">
+                            <i class="fa-solid fa-wifi text-blue-500"></i> Wi-Fi & Giriş Bilgileri
+                        </p>
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Wi-Fi Adı (SSID)</label>
+                                <input type="text" name="wifi_name" value="{{ config.wifi_name or 'VODAFONE_9P1076' }}" required
+                                       class="w-full px-2.5 py-1.5 border rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Wi-Fi Şifresi</label>
+                                <input type="text" name="wifi_password" value="{{ config.wifi_password or 'y4b44CckUkHECRcd' }}" required
+                                       class="w-full px-2.5 py-1.5 border rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Giriş Saati (Check-in)</label>
+                                <input type="text" name="checkin_hour" value="{{ config.checkin_hour or '14:00' }}" required
+                                       class="w-full px-2.5 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Çıkış Saati (Check-out)</label>
+                                <input type="text" name="checkout_hour" value="{{ config.checkout_hour or '11:00' }}" required
+                                       class="w-full px-2.5 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Kapı / Giriş Yöntemi</label>
+                            <input type="text" name="door_entry" value="{{ config.door_entry or 'Daire kapısında karşılama ve anahtar teslimi yapılmaktadır.' }}" required
+                                   class="w-full px-2.5 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Google Maps Konum Linki</label>
+                            <input type="text" name="maps_url" value="{{ config.maps_url or 'https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla' }}" required
+                                   class="w-full px-2.5 py-1.5 border rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
                     <!-- Özel Mesaj Şablonları Bölümü -->
                     <div class="border-t pt-3 space-y-3">
                         <p class="text-xs font-bold text-slate-800 uppercase flex items-center gap-1.5">
                             <i class="fa-regular fa-message text-emerald-500"></i> Özel Mesaj Şablonları
                         </p>
-                        <p class="text-[11px] text-slate-500">Metinlerde <code>{suite_name}</code>, <code>{checkin}</code>, <code>{checkout}</code> etiketlerini kullanabilirsiniz.</p>
+                        <p class="text-[11px] text-slate-500">Etiketler: <code>{suite_name}</code>, <code>{checkin}</code>, <code>{checkout}</code>, <code>{wifi_name}</code>, <code>{wifi_password}</code>, <code>{maps_url}</code></p>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">🌟 Misafire Otomatik Karşılama & Wi-Fi Şablonu</label>
+                            <textarea name="msg_welcome" rows="4" class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 font-sans">{{ config.msg_welcome }}</textarea>
+                        </div>
 
                         <div>
                             <label class="block text-[11px] font-semibold text-slate-700 mb-1">🛎 Yeni Rezervasyon Mesajı</label>
@@ -345,6 +421,33 @@
                 showAlert(json.message, json.status === 'ok');
             } catch (err) {
                 showAlert('Test başarısız: ' + err, false);
+            }
+        }
+
+        async function sendWelcome(uid, inputId) {
+            const inputEl = document.getElementById(inputId);
+            const phone = inputEl ? inputEl.value.trim() : '';
+            if (!phone) {
+                showAlert('Lütfen geçerli bir misafir WhatsApp numarası giriniz (örn: +90542...)', false);
+                if (inputEl) inputEl.focus();
+                return;
+            }
+            if (!confirm(`${phone} numarasına otomatik Karşılama (Self Check-in & Wi-Fi) mesajı gönderilsin mi?`)) {
+                return;
+            }
+            showAlert('Misafire WhatsApp karşılama mesajı gönderiliyor...', true);
+            const data = new FormData();
+            data.append('uid', uid);
+            data.append('phone', phone);
+            try {
+                const res = await fetch('/api/reservation/send-welcome', { method: 'POST', body: data });
+                const json = await res.json();
+                showAlert(json.message, json.status === 'ok');
+                if (json.status === 'ok') {
+                    setTimeout(() => location.reload(), 1500);
+                }
+            } catch (err) {
+                showAlert('Mesaj gönderme hatası: ' + err, false);
             }
         }
 

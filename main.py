@@ -29,9 +29,21 @@ def init_db():
             notified_new INTEGER DEFAULT 0,
             notified_checkin INTEGER DEFAULT 0,
             notified_checkout INTEGER DEFAULT 0,
+            guest_phone TEXT DEFAULT '',
+            notified_welcome INTEGER DEFAULT 0,
             created_at TEXT
         )
     """)
+    # Migration
+    try:
+        cur.execute("ALTER TABLE reservations ADD COLUMN guest_phone TEXT DEFAULT ''")
+    except Exception:
+        pass
+    try:
+        cur.execute("ALTER TABLE reservations ADD COLUMN notified_welcome INTEGER DEFAULT 0")
+    except Exception:
+        pass
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,9 +58,31 @@ def init_db():
         "phone_numbers": os.getenv("PHONE_NUMBERS", ""),
         "morning_time": "09:00",
         "suite_name": "Dalaman Airport Suite 11",
+        "wifi_name": "VODAFONE_9P1076",
+        "wifi_password": "y4b44CckUkHECRcd",
+        "door_entry": "Daire kapısında karşılama ve anahtar teslimi yapılmaktadır. (Varış saatinizi lütfen bildiriniz.)",
+        "checkin_hour": "14:00",
+        "checkout_hour": "11:00",
+        "maps_url": "https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla",
         "msg_new_booking": "🛎 *YENİ BOOKING REZERVASYONU DÜŞTÜ!*\n\n🏨 *Tesis:* {suite_name}\n📅 *Giriş Tarihi:* {checkin}\n🚪 *Çıkış Tarihi:* {checkout}\n\nDetaylar Booking Extranet panelinize eklendi.",
         "msg_checkin": "🏨 *BUGÜN GİRİŞ (CHECK-IN) GÜNÜ!*\n\n🏨 *Tesis:* {suite_name}\n📅 *Giriş:* Bugün ({checkin})\n🚪 *Çıkış:* {checkout}\n\n🔑 Oda hazırlığını ve anahtar teslimini yapınız.\n🚨 *DİKKAT:* KBS / Polis Sistemine misafir kimlik kaydını girmeyi unutmayınız!",
-        "msg_checkout": "🧹 *BUGÜN CHECK-OUT (ÇIKIŞ) GÜNÜ!*\n\n🏨 *Tesis:* {suite_name}\n🚪 *Çıkış:* Bugün ({checkout})\n📅 *Giriş Tarihi:* {checkin}\n\n🧹 Oda temizlik hazırlıklarını başlatınız.\n🚨 *DİKKAT:* KBS / Polis Sisteminden misafir çıkışını vermeyi unutmayınız!"
+        "msg_checkout": "🧹 *BUGÜN CHECK-OUT (ÇIKIŞ) GÜNÜ!*\n\n🏨 *Tesis:* {suite_name}\n🚪 *Çıkış:* Bugün ({checkout})\n📅 *Giriş Tarihi:* {checkin}\n\n🧹 Oda temizlik hazırlıklarını başlatınız.\n🚨 *DİKKAT:* KBS / Polis Sisteminden misafir çıkışını vermeyi unutmayınız!",
+        "msg_welcome": (
+            "🏨 *Welcome to {suite_name}!* \n*(Dalaman Airport Suite'e Hoş Geldiniz!)*\n\n"
+            "Dear Guest, we are delighted to host you. Here are your reservation & check-in details:\n"
+            "*(Değerli misafirimiz, konaklama ve giriş bilgileriniz aşağıdadır:)*\n\n"
+            "📅 *Dates / Tarihler:* {checkin} ➔ {checkout}\n"
+            "📍 *Address / Adres:* Ege Mah. Isparta Sok. No: 6/1 Daire: 11, Dalaman / Muğla\n"
+            "🗺 *Google Maps:* {maps_url}\n\n"
+            "🕒 *Check-in Time:* {checkin_hour} onwards *(Giriş saati: {checkin_hour} itibarıyla)*\n"
+            "🚪 *Check-out Time:* {checkout_hour} *(Çıkış saati: {checkout_hour})* \n"
+            "🔑 *Entry / Giriş:* {door_entry}\n"
+            "📶 *Wi-Fi:* {wifi_name}\n"
+            "🔐 *Wi-Fi Password:* {wifi_password}\n\n"
+            "🚗 *Location:* Only 10 mins from Dalaman International Airport (DLM).\n"
+            "📞 If you need anything, please contact us on WhatsApp: +90 542 367 45 99.\n\n"
+            "✨ *We wish you a wonderful and relaxing stay!*\n*(Keyifli bir konaklama dileriz!)*"
+        )
     }
     for k, v in defaults.items():
         cur.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", (k, v))
@@ -254,18 +288,18 @@ async def index(request: Request):
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     
-    cur.execute("SELECT uid, checkin, checkout, notified_checkout FROM reservations WHERE checkout = ?", (today_str,))
-    today_checkouts = [{"uid": r[0], "checkin": format_date_str(r[1]), "checkout": format_date_str(r[2]), "notified": r[3]} for r in cur.fetchall()]
+    cur.execute("SELECT uid, checkin, checkout, notified_checkout, guest_phone, notified_welcome FROM reservations WHERE checkout = ?", (today_str,))
+    today_checkouts = [{"uid": r[0], "checkin": format_date_str(r[1]), "checkout": format_date_str(r[2]), "notified": r[3], "guest_phone": r[4] or "", "notified_welcome": r[5]} for r in cur.fetchall()]
     
-    cur.execute("SELECT uid, checkin, checkout, notified_checkin FROM reservations WHERE checkin = ?", (today_str,))
-    today_checkins = [{"uid": r[0], "checkin": format_date_str(r[1]), "checkout": format_date_str(r[2]), "notified": r[3]} for r in cur.fetchall()]
+    cur.execute("SELECT uid, checkin, checkout, notified_checkin, guest_phone, notified_welcome FROM reservations WHERE checkin = ?", (today_str,))
+    today_checkins = [{"uid": r[0], "checkin": format_date_str(r[1]), "checkout": format_date_str(r[2]), "notified": r[3], "guest_phone": r[4] or "", "notified_welcome": r[5]} for r in cur.fetchall()]
     
-    cur.execute("SELECT uid, checkin, checkout, created_at, notified_checkout FROM reservations ORDER BY checkin DESC LIMIT 50")
+    cur.execute("SELECT uid, checkin, checkout, created_at, notified_checkout, guest_phone, notified_welcome FROM reservations ORDER BY checkin DESC LIMIT 50")
     all_res = []
     current_hour = datetime.datetime.now().hour
     
     for r in cur.fetchall():
-        uid, c_in, c_out, created_at, notif_out = r
+        uid, c_in, c_out, created_at, notif_out, guest_phone, notif_welcome = r
         
         if today_str > c_out:
             status = "Çıkış Yaptı"
@@ -283,10 +317,13 @@ async def index(request: Request):
             status = "Gelecek"
             
         all_res.append({
-            "uid": uid[:15] + "...",
+            "uid": uid,
+            "short_uid": uid[:15] + "...",
             "checkin": format_date_str(c_in),
             "checkout": format_date_str(c_out),
             "status": status,
+            "guest_phone": guest_phone or "",
+            "notified_welcome": notif_welcome,
             "created_at": created_at
         })
         
@@ -311,19 +348,104 @@ async def save_settings(
     phone_numbers: str = Form(...),
     morning_time: str = Form(...),
     ical_url: str = Form(...),
+    wifi_name: str = Form("VODAFONE_9P1076"),
+    wifi_password: str = Form("y4b44CckUkHECRcd"),
+    door_entry: str = Form("Daire kapısında karşılama ve anahtar teslimi yapılmaktadır."),
+    checkin_hour: str = Form("14:00"),
+    checkout_hour: str = Form("11:00"),
+    maps_url: str = Form("https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla"),
     msg_new_booking: str = Form(...),
     msg_checkin: str = Form(...),
-    msg_checkout: str = Form(...)
+    msg_checkout: str = Form(...),
+    msg_welcome: str = Form(...)
 ):
     update_setting("suite_name", suite_name.strip())
     update_setting("phone_numbers", phone_numbers.strip())
     update_setting("morning_time", morning_time.strip())
     update_setting("ical_url", ical_url.strip())
+    update_setting("wifi_name", wifi_name.strip())
+    update_setting("wifi_password", wifi_password.strip())
+    update_setting("door_entry", door_entry.strip())
+    update_setting("checkin_hour", checkin_hour.strip())
+    update_setting("checkout_hour", checkout_hour.strip())
+    update_setting("maps_url", maps_url.strip())
     update_setting("msg_new_booking", msg_new_booking.strip())
     update_setting("msg_checkin", msg_checkin.strip())
     update_setting("msg_checkout", msg_checkout.strip())
+    update_setting("msg_welcome", msg_welcome.strip())
     add_log("Ayarlar ve mesaj şablonları güncellendi.", "info")
     return JSONResponse({"status": "ok", "message": "Tüm ayarlar ve özel mesaj şablonları başarıyla kaydedildi!"})
+
+@app.post("/api/reservation/send-welcome")
+async def send_welcome_message(uid: str = Form(...), phone: str = Form(...)):
+    phone = phone.strip()
+    if not phone:
+        return JSONResponse({"status": "error", "message": "Lütfen geçerli bir telefon numarası giriniz."})
+        
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT checkin, checkout, suite_name FROM reservations WHERE uid = ?", (uid,))
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        return JSONResponse({"status": "error", "message": "Rezervasyon bulunamadı."})
+        
+    c_in_raw, c_out_raw, r_suite = row
+    c_in = format_date_str(c_in_raw)
+    c_out = format_date_str(c_out_raw)
+    
+    cfg = get_settings()
+    suite_name = cfg.get("suite_name", r_suite or "Dalaman Airport Suite 11")
+    wifi_name = cfg.get("wifi_name", "VODAFONE_9P1076")
+    wifi_password = cfg.get("wifi_password", "y4b44CckUkHECRcd")
+    door_entry = cfg.get("door_entry", "Daire kapısında karşılama ve anahtar teslimi yapılmaktadır.")
+    checkin_hour = cfg.get("checkin_hour", "14:00")
+    checkout_hour = cfg.get("checkout_hour", "11:00")
+    maps_url = cfg.get("maps_url", "https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla")
+    welcome_tpl = cfg.get("msg_welcome", "")
+    
+    msg = (welcome_tpl
+           .replace("{suite_name}", suite_name)
+           .replace("{checkin}", c_in)
+           .replace("{checkout}", c_out)
+           .replace("{wifi_name}", wifi_name)
+           .replace("{wifi_password}", wifi_password)
+           .replace("{door_entry}", door_entry)
+           .replace("{checkin_hour}", checkin_hour)
+           .replace("{checkout_hour}", checkout_hour)
+           .replace("{maps_url}", maps_url))
+           
+    local_gateway_url = "http://127.0.0.1:3000/send"
+    try:
+        r = requests.post(local_gateway_url, json={"phone": phone, "message": msg}, timeout=15)
+        if r.status_code == 200:
+            cur.execute("UPDATE reservations SET guest_phone = ?, notified_welcome = 1 WHERE uid = ?", (phone, uid))
+            conn.commit()
+            conn.close()
+            add_log(f"Misafire karşılama mesajı iletildi -> {phone} ({c_in} - {c_out})", "success")
+            return JSONResponse({"status": "ok", "message": f"Karşılama mesajı misafire ({phone}) başarıyla iletildi!"})
+        else:
+            conn.close()
+            err_text = r.text
+            try:
+                err_text = r.json().get("error", err_text)
+            except Exception:
+                pass
+            add_log(f"Misafir karşılama hatası ({phone}): {err_text}", "error")
+            return JSONResponse({"status": "error", "message": f"Mesaj iletilemedi: {err_text}"})
+    except Exception as e:
+        conn.close()
+        add_log(f"Misafir karşılama bağlantı hatası ({phone}): {str(e)}", "error")
+        return JSONResponse({"status": "error", "message": f"Bağlantı hatası: {str(e)}"})
+
+@app.post("/api/reservation/save-phone")
+async def save_guest_phone(uid: str = Form(...), phone: str = Form(...)):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("UPDATE reservations SET guest_phone = ? WHERE uid = ?", (phone.strip(), uid))
+    conn.commit()
+    conn.close()
+    return JSONResponse({"status": "ok", "message": "Misafir numarası kaydedildi."})
 
 @app.post("/api/test-whatsapp")
 async def test_whatsapp():
