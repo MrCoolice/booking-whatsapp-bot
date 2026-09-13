@@ -392,6 +392,14 @@ async def wa_gateway_qr():
     except Exception as e:
         return JSONResponse({"status": "error", "message": str(e)})
 
+@app.get("/api/whatsapp/qr-view", response_class=HTMLResponse)
+async def wa_gateway_qr_view():
+    try:
+        r = requests.get("http://127.0.0.1:3000/qr-view", timeout=2)
+        return HTMLResponse(content=r.text, status_code=r.status_code)
+    except Exception as e:
+        return HTMLResponse(content=f"<div style='font-family:sans-serif; text-align:center; padding:50px;'><h3>Gateway Bağlantı Hatası: {e}</h3></div>", status_code=500)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

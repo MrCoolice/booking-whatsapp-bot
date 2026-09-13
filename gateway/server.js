@@ -170,8 +170,8 @@ app.post('/send', async (req, res) => {
     }
 });
 
-// Sunucuyu Baslat
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Yerel WhatsApp Gateway calisiyor: http://localhost:${PORT}`);
+// Sunucuyu Baslat (Yalnizca localhost uzerinden erisilebilir - Ag Guvenligi)
+app.listen(PORT, '127.0.0.1', () => {
+    console.log(`Yerel WhatsApp Gateway yalnizca yerel (127.0.0.1:${PORT}) olarak guvenli calisiyor.`);
     startSock();
 });
