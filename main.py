@@ -60,8 +60,7 @@ def init_db():
         "suite_name": "Dalaman Airport Suite 11",
         "wifi_name": "VODAFONE_9P1076",
         "wifi_password": "y4b44CckUkHECRcd",
-        "door_entry": "Daire kapısında karşılama ve anahtar teslimi yapılmaktadır. (Varış saatinizi lütfen bildiriniz.)",
-        "checkin_hour": "14:00",
+        "checkin_hour": "15:00",
         "checkout_hour": "11:00",
         "maps_url": "https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla",
         "msg_new_booking": "🛎 *YENİ BOOKING REZERVASYONU DÜŞTÜ!*\n\n🏨 *Tesis:* {suite_name}\n📅 *Giriş Tarihi:* {checkin}\n🚪 *Çıkış Tarihi:* {checkout}\n\nDetaylar Booking Extranet panelinize eklendi.",
@@ -75,8 +74,7 @@ def init_db():
             "📍 *Address / Adres:* Ege Mah. Isparta Sok. No: 6/1 Daire: 11, Dalaman / Muğla\n"
             "🗺 *Google Maps:* {maps_url}\n\n"
             "🕒 *Check-in Time:* {checkin_hour} onwards *(Giriş saati: {checkin_hour} itibarıyla)*\n"
-            "🚪 *Check-out Time:* {checkout_hour} *(Çıkış saati: {checkout_hour})* \n"
-            "🔑 *Entry / Giriş:* {door_entry}\n"
+            "🚪 *Check-out Time:* {checkout_hour} *(Çıkış saati: {checkout_hour})*\n"
             "📶 *Wi-Fi:* {wifi_name}\n"
             "🔐 *Wi-Fi Password:* {wifi_password}\n\n"
             "🚗 *Location:* Only 10 mins from Dalaman International Airport (DLM).\n"
@@ -350,8 +348,7 @@ async def save_settings(
     ical_url: str = Form(...),
     wifi_name: str = Form("VODAFONE_9P1076"),
     wifi_password: str = Form("y4b44CckUkHECRcd"),
-    door_entry: str = Form("Daire kapısında karşılama ve anahtar teslimi yapılmaktadır."),
-    checkin_hour: str = Form("14:00"),
+    checkin_hour: str = Form("15:00"),
     checkout_hour: str = Form("11:00"),
     maps_url: str = Form("https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla"),
     msg_new_booking: str = Form(...),
@@ -365,7 +362,6 @@ async def save_settings(
     update_setting("ical_url", ical_url.strip())
     update_setting("wifi_name", wifi_name.strip())
     update_setting("wifi_password", wifi_password.strip())
-    update_setting("door_entry", door_entry.strip())
     update_setting("checkin_hour", checkin_hour.strip())
     update_setting("checkout_hour", checkout_hour.strip())
     update_setting("maps_url", maps_url.strip())
@@ -398,8 +394,7 @@ async def send_welcome_message(uid: str = Form(...), phone: str = Form(...)):
     suite_name = cfg.get("suite_name", r_suite or "Dalaman Airport Suite 11")
     wifi_name = cfg.get("wifi_name", "VODAFONE_9P1076")
     wifi_password = cfg.get("wifi_password", "y4b44CckUkHECRcd")
-    door_entry = cfg.get("door_entry", "Daire kapısında karşılama ve anahtar teslimi yapılmaktadır.")
-    checkin_hour = cfg.get("checkin_hour", "14:00")
+    checkin_hour = cfg.get("checkin_hour", "15:00")
     checkout_hour = cfg.get("checkout_hour", "11:00")
     maps_url = cfg.get("maps_url", "https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla")
     welcome_tpl = cfg.get("msg_welcome", "")
@@ -410,7 +405,6 @@ async def send_welcome_message(uid: str = Form(...), phone: str = Form(...)):
            .replace("{checkout}", c_out)
            .replace("{wifi_name}", wifi_name)
            .replace("{wifi_password}", wifi_password)
-           .replace("{door_entry}", door_entry)
            .replace("{checkin_hour}", checkin_hour)
            .replace("{checkout_hour}", checkout_hour)
            .replace("{maps_url}", maps_url))
