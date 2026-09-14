@@ -40,6 +40,9 @@
                 <button onclick="syncNow()" class="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
                     <i class="fa-solid fa-arrows-rotate"></i> Şimdi Eşle
                 </button>
+                <button onclick="resendLatestAlert()" class="bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm" title="Son rezervasyon bildirimini WhatsApp'a tekrar iletir">
+                    <i class="fa-solid fa-bell"></i> Rezervasyon Bildirimi Testi
+                </button>
                 <button onclick="testWhatsApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
                     <i class="fa-brands fa-whatsapp"></i> Test Gönder
                 </button>
@@ -222,6 +225,10 @@
                                             <button onclick="sendWelcome('{{ r.uid }}', 'phone_res_{{ loop.index }}')" title="Karşılama / Wi-Fi Mesajı Gönder"
                                                     class="{% if r.notified_welcome %}bg-slate-800 hover:bg-slate-700 text-slate-300{% else %}bg-emerald-600 hover:bg-emerald-500 text-white{% endif %} text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1 transition shadow-xs whitespace-nowrap cursor-pointer">
                                                 <i class="fa-brands fa-whatsapp text-emerald-400"></i> {% if r.notified_welcome %}İletildi ✓{% else %}Karşıla{% endif %}
+                                            </button>
+                                            <button onclick="resendBookingAlert('{{ r.uid }}')" title="Bu rezervasyonun 'Yeni Rezervasyon Düştü' bildirimini WhatsApp'a tekrar gönder"
+                                                    class="bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 text-[11px] px-2 py-1 rounded-lg font-medium flex items-center gap-1 transition shadow-xs whitespace-nowrap cursor-pointer">
+                                                <i class="fa-solid fa-bell text-violet-500"></i> Bildir
                                             </button>
                                         </div>
                                     </td>
@@ -415,6 +422,35 @@
                 showAlert(json.message, json.status === 'ok');
             } catch (err) {
                 showAlert('Test başarısız: ' + err, false);
+            }
+        }
+
+        async function resendLatestAlert() {
+            try {
+                showAlert('Son rezervasyon bildirimi WhatsApp\'a gönderiliyor...', true);
+                const res = await fetch('/api/reservation/resend-new-alert', { method: 'POST' });
+                const json = await res.json();
+                showAlert(json.message, json.status === 'ok');
+                if (json.status === 'ok') setTimeout(() => location.reload(), 1500);
+            } catch (err) {
+                showAlert('Bildirim gönderme hatası: ' + err, false);
+            }
+        }
+
+        async function resendBookingAlert(uid) {
+            if (!confirm('Bu rezervasyonun \'Yeni Rezervasyon Düştü\' bildirimi WhatsApp numaralarınıza tekrar gönderilsin mi?')) {
+                return;
+            }
+            try {
+                showAlert('Rezervasyon bildirimi gönderiliyor...', true);
+                const data = new FormData();
+                data.append('uid', uid);
+                const res = await fetch('/api/reservation/resend-new-alert', { method: 'POST', body: data });
+                const json = await res.json();
+                showAlert(json.message, json.status === 'ok');
+                if (json.status === 'ok') setTimeout(() => location.reload(), 1500);
+            } catch (err) {
+                showAlert('Bildirim gönderme hatası: ' + err, false);
             }
         }
 

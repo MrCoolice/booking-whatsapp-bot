@@ -465,6 +465,36 @@ async def test_whatsapp():
     else:
         return JSONResponse({"status": "error", "message": "WhatsApp mesajı gönderilemedi. Logları ve ayarları kontrol edin."})
 
+@app.post("/api/reservation/resend-new-alert")
+async def resend_new_alert(uid: str = Form(None)):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    if uid and uid.strip():
+        cur.execute("SELECT uid, checkin, checkout, suite_name FROM reservations WHERE uid = ?", (uid.strip(),))
+    else:
+        cur.execute("SELECT uid, checkin, checkout, suite_name FROM reservations ORDER BY created_at DESC LIMIT 1")
+    row = cur.fetchone()
+    conn.close()
+    
+    if not row:
+        return JSONResponse({"status": "error", "message": "Veritabanında kayıtlı rezervasyon bulunamadı."})
+        
+    uid_res, c_in_raw, c_out_raw, r_suite = row
+    c_in = format_date_str(c_in_raw)
+    c_out = format_date_str(c_out_raw)
+    
+    cfg = get_settings()
+    suite_name = cfg.get("suite_name", r_suite or "Dalaman Airport Suite 11")
+    msg_tpl = cfg.get("msg_new_booking", "🛎 *YENİ BOOKING REZERVASYONU DÜŞTÜ!*\n\n🏨 *Tesis:* {suite_name}\n📅 *Giriş Tarihi:* {checkin}\n🚪 *Çıkış Tarihi:* {checkout}\n\nDetaylar Booking Extranet panelinize eklendi.")
+    
+    msg = msg_tpl.replace("{suite_name}", suite_name).replace("{checkin}", c_in).replace("{checkout}", c_out)
+    res = send_whatsapp(msg)
+    if res:
+        add_log(f"Rezervasyon bildirimi manuel tetiklendi: {c_in} - {c_out}", "success")
+        return JSONResponse({"status": "ok", "message": f"'{c_in} - {c_out}' rezervasyon bildirimi WhatsApp'a başarıyla gönderildi!"})
+    else:
+        return JSONResponse({"status": "error", "message": "WhatsApp mesajı iletilemedi. Logları ve WhatsApp bağlantısını kontrol edin."})
+
 @app.post("/api/sync-now")
 async def manual_sync():
     sync_calendar()
