@@ -15,48 +15,78 @@
 
     <!-- Üst Bar -->
     <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
-        <div class="max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="flex items-center space-x-3">
-                <div class="bg-emerald-500 p-2.5 rounded-xl shadow-md">
-                    <i class="fa-solid fa-hotel text-xl text-white"></i>
+                <div class="bg-emerald-500 p-2 rounded-xl shadow-md">
+                    <i class="fa-solid fa-hotel text-lg text-white"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold tracking-tight">{{ config.suite_name }}</h1>
-                    <p class="text-xs text-slate-400">Proxmox Booking.com & WhatsApp Otomasyonu</p>
+                    <h1 class="text-base sm:text-lg font-bold tracking-tight">{{ config.suite_name }}</h1>
+                    <p class="text-[11px] text-slate-400">Proxmox Booking.com & WhatsApp Otomasyonu</p>
                 </div>
             </div>
             
-            <div class="flex items-center gap-2 sm:gap-3">
-                <span class="bg-slate-800 border border-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5">
+            <div class="flex items-center gap-2 sm:gap-2.5 flex-wrap justify-center">
+                <span class="bg-slate-800 border border-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5">
                     <i class="fa-regular fa-calendar"></i> {{ today_display }}
                 </span>
                 
                 <!-- Güvenli Sandbox Test Modu Butonu -->
                 <button onclick="toggleSandbox()" id="sandboxToggleBtn" 
-                        class="{% if config.sandbox_mode == '1' %}bg-emerald-950/80 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-500/50{% else %}bg-rose-950/80 hover:bg-rose-900/80 text-rose-300 border border-rose-500/50{% endif %} px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
-                        title="Açıkken mesajlar gerçek misafire gitmez, sadece test telefonuna (+905423674599) iletilir.">
-                    <span id="sandboxDot" class="w-2.5 h-2.5 rounded-full {% if config.sandbox_mode == '1' %}bg-emerald-400 animate-pulse{% else %}bg-rose-500{% endif %}"></span>
+                        class="{% if config.sandbox_mode == '1' %}bg-emerald-950/90 hover:bg-emerald-900/90 text-emerald-300 border border-emerald-500/50{% else %}bg-rose-950/90 hover:bg-rose-900/90 text-rose-300 border border-rose-500/50{% endif %} px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+                        title="Açıkken mesajlar gerçek misafire gitmez, test telefonunuza (+905423674599) yönlendirilir.">
+                    <span id="sandboxDot" class="w-2 h-2 rounded-full {% if config.sandbox_mode == '1' %}bg-emerald-400 animate-pulse{% else %}bg-rose-500{% endif %}"></span>
                     <span id="sandboxText">{% if config.sandbox_mode == '1' %}🛡️ Test Modu: AÇIK{% else %}🔴 CANLI MOD{% endif %}</span>
                 </button>
 
                 <!-- Yerel WhatsApp Durum Butonu -->
                 <button onclick="openWhatsAppModal()" id="waBadge" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border border-slate-700 shadow-sm cursor-pointer">
-                    <span id="waDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span id="waDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
                     <span id="waText">WhatsApp: Kontrol Ediliyor</span>
                 </button>
 
-                <button onclick="syncNow()" class="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
+                <button onclick="syncNow()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm cursor-pointer">
                     <i class="fa-solid fa-arrows-rotate"></i> Şimdi Eşle
                 </button>
-                <button onclick="resendLatestAlert()" class="bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm" title="Son rezervasyon bildirimini WhatsApp'a tekrar iletir">
-                    <i class="fa-solid fa-bell"></i> Bildirim Testi
-                </button>
-                <button onclick="testWhatsApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
-                    <i class="fa-brands fa-whatsapp"></i> Test Gönder
+                <button onclick="testWhatsApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm cursor-pointer">
+                    <i class="fa-brands fa-whatsapp"></i> Test
                 </button>
             </div>
         </div>
     </header>
+
+    <!-- Sekmeli Navigasyon Çubuğu (Tabs Bar) -->
+    <nav class="bg-white border-b border-slate-200 sticky top-[61px] sm:top-[65px] z-40 shadow-xs">
+        <div class="max-w-[1600px] w-full mx-auto px-4 sm:px-6 flex items-center justify-between gap-4 overflow-x-auto py-2">
+            <div class="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200/80">
+                <button onclick="switchTab('reception')" id="tab-btn-reception" 
+                        class="tab-btn px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 bg-indigo-600 text-white shadow-sm cursor-pointer whitespace-nowrap">
+                    <i class="fa-solid fa-hotel"></i> 🏨 Resepsiyon & Misafirler
+                </button>
+                <button onclick="switchTab('testlab')" id="tab-btn-testlab" 
+                        class="tab-btn px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/80 cursor-pointer whitespace-nowrap">
+                    <i class="fa-solid fa-flask-vial text-purple-600"></i> 🧪 Test Laboratuvarı
+                </button>
+                <button onclick="switchTab('crm')" id="tab-btn-crm" 
+                        class="tab-btn px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/80 cursor-pointer whitespace-nowrap">
+                    <i class="fa-solid fa-plane-departure text-amber-500"></i> 📢 CRM & Kampanyalar
+                </button>
+                <button onclick="switchTab('settings')" id="tab-btn-settings" 
+                        class="tab-btn px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 text-slate-600 hover:text-slate-900 hover:bg-white/80 cursor-pointer whitespace-nowrap">
+                    <i class="fa-solid fa-sliders text-slate-600"></i> ⚙️ Ayarlar & Entegrasyon
+                </button>
+            </div>
+
+            <div class="hidden lg:flex items-center gap-2 text-xs">
+                <span class="bg-slate-50 border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg font-medium">
+                    Toplam: <b>{{ reservations|length }} Rezervasyon</b>
+                </span>
+                <span class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1">
+                    <i class="fa-solid fa-shield-check"></i> Proxmox LXC Aktif
+                </span>
+            </div>
+        </div>
+    </nav>
 
     <!-- WhatsApp QR Modal Dialog (Karekod Eşleme Penceresi) -->
     <div id="waModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -65,7 +95,7 @@
                 <h3 class="font-bold text-slate-900 flex items-center gap-2 text-base">
                     <i class="fa-brands fa-whatsapp text-emerald-500 text-xl"></i> Ücretsiz Yerel WhatsApp Gateway
                 </h3>
-                <button onclick="closeWhatsAppModal()" class="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+                <button onclick="closeWhatsAppModal()" class="text-slate-400 hover:text-slate-600 text-lg cursor-pointer">✕</button>
             </div>
             
             <div id="waModalBody" class="py-2 space-y-3">
@@ -78,14 +108,14 @@
                 <div id="waInstructions" class="text-xs text-slate-600 space-y-1">
                     <p class="font-semibold text-slate-800">Cihazınızı Bağlamak İçin:</p>
                     <p>1. Telefonunuzdan <b>WhatsApp</b> uygulamasını açın.</p>
-                    <p>2. <b>Ayarlar &gt; Bağlı Cihazlar &gt; Cihaz Bağla</b> butonuna dokunun.</p>
+                    <p>2. <b>Bağlı Cihazlar &gt; Cihaz Bağla</b> butonuna dokunun.</p>
                     <p>3. Yukarıdaki karekodu kameranızla okutun.</p>
                 </div>
             </div>
 
             <div class="border-t pt-3 flex justify-between items-center text-xs text-slate-500">
                 <span id="waModalStatus">Durum: Bekleniyor...</span>
-                <button onclick="closeWhatsAppModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-1.5 rounded-lg font-medium">Kapat</button>
+                <button onclick="closeWhatsAppModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-1.5 rounded-lg font-medium cursor-pointer">Kapat</button>
             </div>
         </div>
     </div>
@@ -102,8 +132,8 @@
             
             <form id="csvForm" onsubmit="uploadBookingCsv(event)" class="space-y-4">
                 <div class="bg-emerald-50/60 border border-emerald-200 rounded-xl p-3.5 text-xs text-emerald-900 space-y-1.5">
-                    <p class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-emerald-600"></i> Otomatik Akıllı Eşleştirme Motoru</p>
-                    <p class="text-slate-600 leading-relaxed">Booking.com Extranet panelinizden indirdiğiniz <b>CSV veya Excel/TSV</b> dışa aktarma dosyasını buraya yükleyin. Bot misafir telefonlarını uluslararası formatta temizleyip rezervasyonlarınızla otomatik eşleştirir.</p>
+                    <p class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-emerald-600"></i> Otomatik Akıllı Eşleştirme & Dil Tespiti</p>
+                    <p class="text-slate-600 leading-relaxed">Booking.com Extranet panelinizden indirdiğiniz <b>CSV veya Excel/TSV</b> dosyasını yükleyin. Bot misafir telefonlarını ve ülkelerini (Almanya, Rusya, İngiltere, Türkiye vb.) temizleyip otomatik eşleştirir.</p>
                 </div>
 
                 <div>
@@ -113,7 +143,7 @@
                 </div>
 
                 <div id="csvUploadProgress" class="hidden text-xs text-slate-500 flex items-center gap-2">
-                    <i class="fa-solid fa-spinner fa-spin text-emerald-600"></i> Dosya işleniyor ve telefonlar eşleştiriliyor...
+                    <i class="fa-solid fa-spinner fa-spin text-emerald-600"></i> Dosya işleniyor ve diller tespit ediliyor...
                 </div>
 
                 <div class="border-t pt-3 flex justify-between items-center text-xs">
@@ -126,555 +156,587 @@
         </div>
     </div>
 
-    <!-- Ana İçerik -->
+    <!-- Ana İçerik Alanı -->
     <main class="max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
         
         <!-- Bildirim Alanı -->
-        <div id="alertBox" class="hidden p-4 rounded-xl text-sm font-medium transition-all duration-300"></div>
+        <div id="alertBox" class="hidden p-4 rounded-xl text-sm font-medium transition-all duration-300 shadow-sm"></div>
 
-        <!-- Günün Durum Kartları -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- ========================================================================= -->
+        <!-- 1. SEKME: 🏨 RESEPSİYON & MİSAFİRLER (GÜNLÜK İŞLER) -->
+        <!-- ========================================================================= -->
+        <div id="tab-reception" class="tab-content space-y-6">
             
-            <!-- Bugün Çıkışlar -->
-            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-2.5">
-                        <span class="w-3 h-3 rounded-full bg-rose-500 animate-pulse"></span>
-                        <h2 class="text-base font-bold text-slate-900">Bugün Çıkış (Check-out) Yapacaklar</h2>
-                    </div>
-                    <span class="bg-rose-50 text-rose-700 text-xs px-2.5 py-1 rounded-full font-bold">{{ today_checkouts|length }} Oda</span>
-                </div>
-
-                {% if today_checkouts %}
-                    <div class="space-y-3">
-                        {% for item in today_checkouts %}
-                        <div class="p-3.5 bg-rose-50/60 border border-rose-100 rounded-xl flex justify-between items-center">
-                            <div>
-                                <p class="text-sm font-bold text-slate-800">{{ config.suite_name }}</p>
-                                <p class="text-xs text-slate-500">Giriş: {{ item.checkin }} ➔ Çıkış: {{ item.checkout }}</p>
-                            </div>
-                            <span class="bg-rose-100 text-rose-800 text-xs px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1">
-                                <i class="fa-solid fa-broom"></i> Temizlik Bekliyor
-                            </span>
+            <!-- Günün Durum Kartları -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Bugün Çıkışlar -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-3 h-3 rounded-full bg-rose-500 animate-pulse"></span>
+                            <h2 class="text-base font-bold text-slate-900">Bugün Çıkış (Check-out) Yapacaklar</h2>
                         </div>
-                        {% endfor %}
+                        <span class="bg-rose-50 text-rose-700 text-xs px-2.5 py-1 rounded-full font-bold">{{ today_checkouts|length }} Oda</span>
                     </div>
-                {% else %}
-                    <div class="py-6 text-center text-slate-400 text-sm">
-                        <i class="fa-regular fa-circle-check text-2xl mb-1 text-slate-300 block"></i>
-                        Bugün için çıkış yapacak oda bulunmuyor.
-                    </div>
-                {% endif %}
-            </div>
 
-            <!-- Bugün Girişler -->
-            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-2.5">
-                        <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                        <h2 class="text-base font-bold text-slate-900">Bugün Giriş (Check-in) Yapacaklar</h2>
-                    </div>
-                    <span class="bg-emerald-50 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-bold">{{ today_checkins|length }} Oda</span>
-                </div>
-
-                {% if today_checkins %}
-                    <div class="space-y-3">
-                        {% for item in today_checkins %}
-                        <div class="p-4 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl space-y-3 shadow-xs">
-                            <div class="flex justify-between items-center">
+                    {% if today_checkouts %}
+                        <div class="space-y-3">
+                            {% for item in today_checkouts %}
+                            <div class="p-3.5 bg-rose-50/60 border border-rose-100 rounded-xl flex justify-between items-center">
                                 <div>
-                                    <p class="text-sm font-bold text-slate-900">{{ config.suite_name }}</p>
-                                    <p class="text-xs text-slate-500 font-medium">Giriş: {{ item.checkin }} ➔ Çıkış: {{ item.checkout }}</p>
+                                    <p class="text-sm font-bold text-slate-800">{{ config.suite_name }}</p>
+                                    <p class="text-xs text-slate-500">Giriş: {{ item.checkin }} ➔ Çıkış: {{ item.checkout }}</p>
                                 </div>
-                                <span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1">
-                                    <i class="fa-solid fa-key"></i> Giriş Bekleniyor
+                                <span class="bg-rose-100 text-rose-800 text-xs px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1">
+                                    <i class="fa-solid fa-broom"></i> Temizlik Bekliyor
                                 </span>
                             </div>
-                            
-                            <!-- Misafir Karşılama Alanı -->
-                            <div class="pt-2.5 border-t border-emerald-200/60 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                                <div class="relative flex-1">
-                                    <i class="fa-solid fa-phone text-emerald-600 absolute left-3 top-2.5 text-xs"></i>
-                                    <input type="text" id="phone_in_{{ loop.index }}" value="{{ item.guest_phone }}" placeholder="Misafir WhatsApp No (+905...)"
-                                           class="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 font-mono">
-                                </div>
-                                <button onclick="sendWelcome('{{ item.uid }}', 'phone_in_{{ loop.index }}')" 
-                                        class="{% if item.notified_welcome %}bg-slate-800 hover:bg-slate-700 text-slate-200{% else %}bg-emerald-600 hover:bg-emerald-500 text-white{% endif %} px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm whitespace-nowrap cursor-pointer">
-                                    <i class="fa-brands fa-whatsapp text-emerald-400"></i> {% if item.notified_welcome %}Tekrar Gönder{% else %}Karşılama & Wi-Fi Gönder{% endif %}
-                                </button>
-                            </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
+                    {% else %}
+                        <div class="py-6 text-center text-slate-400 text-sm">
+                            <i class="fa-regular fa-circle-check text-2xl mb-1 text-slate-300 block"></i>
+                            Bugün için çıkış yapacak oda bulunmuyor.
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Bugün Girişler -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                            <h2 class="text-base font-bold text-slate-900">Bugün Giriş (Check-in) Yapacaklar</h2>
+                        </div>
+                        <span class="bg-emerald-50 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-bold">{{ today_checkins|length }} Oda</span>
                     </div>
-                {% else %}
-                    <div class="py-6 text-center text-slate-400 text-sm">
-                        <i class="fa-solid fa-bed text-2xl mb-1 text-slate-300 block"></i>
-                        Bugün yeni giriş yapacak misafir yok.
+
+                    {% if today_checkins %}
+                        <div class="space-y-3">
+                            {% for item in today_checkins %}
+                            <div class="p-4 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl space-y-3 shadow-xs">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-900">{{ config.suite_name }}</p>
+                                        <p class="text-xs text-slate-500 font-medium">Giriş: {{ item.checkin }} ➔ Çıkış: {{ item.checkout }}</p>
+                                    </div>
+                                    <span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1">
+                                        <i class="fa-solid fa-key"></i> Giriş Bekleniyor
+                                    </span>
+                                </div>
+                                
+                                <div class="pt-2.5 border-t border-emerald-200/60 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                    <div class="relative flex-1">
+                                        <i class="fa-solid fa-phone text-emerald-600 absolute left-3 top-2.5 text-xs"></i>
+                                        <input type="text" id="phone_in_{{ loop.index }}" value="{{ item.guest_phone }}" placeholder="Misafir WhatsApp No (+905...)"
+                                               class="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 font-mono">
+                                    </div>
+                                    <button onclick="sendWelcome('{{ item.uid }}', 'phone_in_{{ loop.index }}')" 
+                                            class="{% if item.notified_welcome %}bg-slate-800 hover:bg-slate-700 text-slate-200{% else %}bg-emerald-600 hover:bg-emerald-500 text-white{% endif %} px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm whitespace-nowrap cursor-pointer">
+                                        <i class="fa-brands fa-whatsapp text-emerald-400"></i> {% if item.notified_welcome %}Tekrar Gönder{% else %}Karşılama & Wi-Fi Gönder{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="py-6 text-center text-slate-400 text-sm">
+                            <i class="fa-solid fa-bed text-2xl mb-1 text-slate-300 block"></i>
+                            Bugün yeni giriş yapacak misafir yok.
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <!-- Aktif Rezervasyon Tablosu (Filtreler ve Arama ile Ferahlatılmış) -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                <div class="flex flex-col lg:flex-row justify-between lg:items-center gap-4 border-b pb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900">Rezervasyon & Misafir Rehberi</h2>
+                        <p class="text-xs text-slate-500">Booking takviminden ve yüklenen dosyalardan çekilen misafirler</p>
                     </div>
-                {% endif %}
+
+                    <!-- Hızlı Filtre Butonları ve Arama Kutusu -->
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+                            <button onclick="filterStatus('all')" id="filter-all" class="status-filter-btn px-2.5 py-1 rounded-lg font-semibold bg-white text-indigo-700 shadow-xs cursor-pointer">Tümü ({{ reservations|length }})</button>
+                            <button onclick="filterStatus('Bugün Giriş')" id="filter-in" class="status-filter-btn px-2.5 py-1 rounded-lg font-semibold text-slate-600 hover:text-slate-900 cursor-pointer">Bugün Giriş</button>
+                            <button onclick="filterStatus('Konaklıyor')" id="filter-stay" class="status-filter-btn px-2.5 py-1 rounded-lg font-semibold text-slate-600 hover:text-slate-900 cursor-pointer">Konaklayanlar</button>
+                            <button onclick="filterStatus('Bugün Çıkış')" id="filter-out" class="status-filter-btn px-2.5 py-1 rounded-lg font-semibold text-slate-600 hover:text-slate-900 cursor-pointer">Bugün Çıkış</button>
+                            <button onclick="filterStatus('Gelecek')" id="filter-future" class="status-filter-btn px-2.5 py-1 rounded-lg font-semibold text-slate-600 hover:text-slate-900 cursor-pointer">Gelecek</button>
+                        </div>
+
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-2.5 top-2 text-xs"></i>
+                            <input type="text" onkeyup="searchReservations(this.value)" placeholder="Telefon veya tarih ara..." 
+                                   class="pl-7 pr-3 py-1 text-xs border border-slate-300 rounded-xl outline-none focus:ring-1 focus:ring-indigo-500 bg-white w-40 sm:w-52">
+                        </div>
+
+                        <button onclick="openCsvModal()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-xs px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer transition whitespace-nowrap">
+                            <i class="fa-solid fa-file-arrow-up text-emerald-300"></i> 📂 Booking CSV Yükle
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm" id="reservationsTable">
+                        <thead>
+                            <tr class="text-xs uppercase text-slate-400 border-b">
+                                <th class="py-3 px-2">Giriş Tarihi</th>
+                                <th class="py-3 px-2">Çıkış Tarihi</th>
+                                <th class="py-3 px-2">Durum</th>
+                                <th class="py-3 px-2">Misafir & Dil</th>
+                                <th class="py-3 px-2">Hızlı İşlemler</th>
+                                <th class="py-3 px-2">Kayıt</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% for r in reservations %}
+                            <tr class="hover:bg-slate-50/80 transition reservation-row" data-status="{{ r.status }}" data-phone="{{ r.guest_phone }}" data-checkin="{{ r.checkin }}" data-checkout="{{ r.checkout }}">
+                                <td class="py-3 px-2 font-semibold text-slate-800">{{ r.checkin }}</td>
+                                <td class="py-3 px-2 font-semibold text-slate-800">{{ r.checkout }}</td>
+                                <td class="py-3 px-2 space-y-1">
+                                    <div>
+                                        {% if r.status == 'Konaklıyor' %}
+                                            <span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Konaklıyor</span>
+                                        {% elif r.status == 'Bugün Giriş' %}
+                                            <span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Bugün Giriş</span>
+                                        {% elif r.status == 'Bugün Çıkış' %}
+                                            <span class="bg-rose-100 text-rose-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Bugün Çıkış</span>
+                                        {% elif r.status == 'Gelecek' %}
+                                            <span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Gelecek</span>
+                                        {% else %}
+                                            <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-0.5 rounded-full font-medium">Çıkış Yaptı</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if r.has_discount %}
+                                    <div>
+                                        <span class="bg-emerald-50 text-emerald-900 border border-emerald-300 text-[10px] px-2 py-0.5 rounded-md font-bold inline-flex items-center gap-1 shadow-xs" title="Misafir 'EVET' yanıtı verdi (%10 Web İndirimi DAS10)">
+                                            <i class="fa-solid fa-tag text-emerald-600"></i> %10 Web İndirimi (DAS10)
+                                        </span>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td class="py-2.5 px-2">
+                                    <div class="flex items-center gap-1.5">
+                                        {% if r.language == 'de' %}
+                                            <span class="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap" title="Almanca (Almanya/Avusturya/İsviçre)">🇩🇪 DE{% if r.booker_country %} ({{ r.booker_country }}){% endif %}</span>
+                                        {% elif r.language == 'ru' %}
+                                            <span class="bg-indigo-100 text-indigo-900 border border-indigo-300 text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap" title="Rusça (Rusya/Kazakistan/Ukrayna)">🇷🇺 RU{% if r.booker_country %} ({{ r.booker_country }}){% endif %}</span>
+                                        {% elif r.language == 'tr' %}
+                                            <span class="bg-rose-100 text-rose-900 border border-rose-300 text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap" title="Türkçe / Azerice">🇹🇷 TR{% if r.booker_country %} ({{ r.booker_country }}){% endif %}</span>
+                                        {% else %}
+                                            <span class="bg-blue-100 text-blue-900 border border-blue-300 text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap" title="İngilizce (Uluslararası)">🇬🇧 EN{% if r.booker_country %} ({{ r.booker_country }}){% endif %}</span>
+                                        {% endif %}
+                                        <input type="text" id="phone_res_{{ loop.index }}" value="{{ r.guest_phone }}" placeholder="+905..." 
+                                               class="w-28 sm:w-32 px-2 py-1 text-xs border border-slate-300 rounded-lg outline-none focus:ring-1 focus:ring-emerald-500 font-mono bg-white">
+                                    </div>
+                                </td>
+                                <td class="py-2.5 px-2">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <button onclick="sendWelcome('{{ r.uid }}', 'phone_res_{{ loop.index }}')" title="Karşılama & Wi-Fi Mesajı Gönder (Kendi Dilinde)"
+                                                class="{% if r.notified_welcome %}bg-slate-800 hover:bg-slate-700 text-slate-300{% else %}bg-emerald-600 hover:bg-emerald-500 text-white{% endif %} text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1 transition shadow-xs whitespace-nowrap cursor-pointer">
+                                            <i class="fa-brands fa-whatsapp text-emerald-400"></i> {% if r.notified_welcome %}İletildi ✓{% else %}Karşıla{% endif %}
+                                        </button>
+                                        <button onclick="sendExtension('{{ r.uid }}')" title="1 Gece İndirimli Uzatma Teklifi Gönder (Kendi Dilinde)"
+                                                class="{% if r.notified_extension %}bg-slate-800 hover:bg-slate-700 text-slate-300{% else %}bg-amber-500 hover:bg-amber-600 text-white{% endif %} text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1 transition shadow-xs whitespace-nowrap cursor-pointer">
+                                            <i class="fa-solid fa-gift text-amber-200"></i> {% if r.notified_extension %}Uzatıldı ✓{% else %}Uzat{% endif %}
+                                        </button>
+                                        <button onclick="resendBookingAlert('{{ r.uid }}')" title="Bu rezervasyonun 'Yeni Rezervasyon Düştü' bildirimini WhatsApp yöneticilerine tekrar ilet"
+                                                class="bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 text-[11px] px-2 py-1 rounded-lg font-medium flex items-center gap-1 transition shadow-xs whitespace-nowrap cursor-pointer">
+                                            <i class="fa-solid fa-bell text-violet-500"></i> Bildir
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-2 text-xs text-slate-400">{{ r.created_at }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
         </div>
 
-        <!-- Rezervasyonlar & Ayarlar Bölümü -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- ========================================================================= -->
+        <!-- 2. SEKME: 🧪 ÇOK DİLLİ TEST LABORATUVARI (SİMÜLATÖR) -->
+        <!-- ========================================================================= -->
+        <div id="tab-testlab" class="tab-content hidden space-y-6">
             
-            <!-- Sol Taraf: Rezervasyon Listesi ve Sistem Olay Günlüğü (2 Kolon) -->
-            <div class="lg:col-span-2 space-y-6">
-                <!-- Rezervasyon Listesi -->
+            <!-- Güvenli Sandbox Başlık Kartı -->
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-6 border border-indigo-500/30 shadow-xl space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-indigo-900/60 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-indigo-500/20 text-indigo-400 p-3 rounded-2xl border border-indigo-500/30">
+                            <i class="fa-solid fa-flask-vial text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                Çok Dilli Test Laboratuvarı & Simülatör
+                                <span class="text-[10px] bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 px-2.5 py-0.5 rounded-full font-semibold">🛡️ %100 Güvenli</span>
+                            </h2>
+                            <p class="text-xs text-indigo-200/80">Gerçek misafirleri rahatsız etmeden tüm dillerdeki mesajları tek tıkla test telefonunuza gönderin</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <div class="bg-slate-800/90 border border-slate-700 text-slate-200 px-3.5 py-2 rounded-xl text-xs font-mono font-medium flex items-center gap-2">
+                            <i class="fa-solid fa-mobile-screen text-emerald-400"></i>
+                            Hedef Test Telefonu: <b class="text-emerald-400">{{ config.test_phone }}</b>
+                        </div>
+                        <button onclick="toggleSandbox()" 
+                                class="{% if config.sandbox_mode == '1' %}bg-emerald-600 hover:bg-emerald-500 text-white{% else %}bg-rose-600 hover:bg-rose-500 text-white{% endif %} text-xs font-bold px-4 py-2 rounded-xl transition shadow-sm cursor-pointer whitespace-nowrap">
+                            {% if config.sandbox_mode == '1' %}🛡️ Test Modu (Açık){% else %}🔴 Canlı Mod (Dikkat){% endif %}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-950/40 border border-indigo-900/40 rounded-xl p-3.5 text-xs text-indigo-200 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-indigo-400 text-sm"></i>
+                    <span>Test Modu devredeyken aşağıdaki butonlara bastığınızda mesajlar <b>{{ config.test_phone }}</b> numarasına, misafirin gözünden tam olarak nasıl görüneceği başlığıyla birlikte anında WhatsApp'tan iletilir.</span>
+                </div>
+            </div>
+
+            <!-- Test Butonları Grid Kartı -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- 1. Bölüm: 4 Dilde Karşılama & Wi-Fi & %10 Kupon Testi -->
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b pb-4">
-                        <div>
-                            <h2 class="text-lg font-bold text-slate-900">Aktif Rezervasyon Listesi</h2>
-                            <p class="text-xs text-slate-500">Booking takviminden ve yüklenen dosyalardan çekilen rezervasyonlar</p>
-                        </div>
+                    <div class="border-b pb-3 flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <button onclick="openCsvModal()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-xs px-3.5 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer transition">
-                                <i class="fa-solid fa-file-arrow-up text-emerald-300"></i> 📂 Booking CSV/TSV Yükle
-                            </button>
-                            <span class="text-xs font-semibold bg-slate-100 px-3 py-1.5 rounded-lg text-slate-600">
-                                {{ reservations|length }} Kayıt
-                            </span>
+                            <span class="p-2 bg-emerald-100 text-emerald-700 rounded-xl"><i class="fa-brands fa-whatsapp text-lg"></i></span>
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-sm">Karşılama & Wi-Fi Mesajları</h3>
+                                <p class="text-xs text-slate-500">Wi-Fi, Google Maps konumu ve %10 DAS10 indirim daveti içerir</p>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead>
-                                <tr class="text-xs uppercase text-slate-400 border-b">
-                                    <th class="py-3 px-2">Giriş Tarihi</th>
-                                    <th class="py-3 px-2">Çıkış Tarihi</th>
-                                    <th class="py-3 px-2">Durum</th>
-                                    <th class="py-3 px-2">Misafir & Karşılama</th>
-                                    <th class="py-3 px-2">Kayıt Zamanı</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                {% for r in reservations %}
-                                <tr class="hover:bg-slate-50/80 transition">
-                                    <td class="py-3 px-2 font-semibold text-slate-800">{{ r.checkin }}</td>
-                                    <td class="py-3 px-2 font-semibold text-slate-800">{{ r.checkout }}</td>
-                                    <td class="py-3 px-2 space-y-1">
-                                        <div>
-                                            {% if r.status == 'Konaklıyor' %}
-                                                <span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Konaklıyor</span>
-                                            {% elif r.status == 'Bugün Giriş' %}
-                                                <span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Bugün Giriş</span>
-                                            {% elif r.status == 'Bugün Çıkış' %}
-                                                <span class="bg-rose-100 text-rose-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Bugün Çıkış</span>
-                                            {% elif r.status == 'Gelecek' %}
-                                                <span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Gelecek</span>
-                                            {% else %}
-                                                <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-0.5 rounded-full font-medium">Çıkış Yaptı</span>
-                                            {% endif %}
-                                        </div>
-                                        {% if r.has_discount %}
-                                        <div>
-                                            <span class="bg-emerald-50 text-emerald-900 border border-emerald-300 text-[10px] px-2 py-0.5 rounded-md font-bold inline-flex items-center gap-1 shadow-xs" title="Misafir 'EVET' yanıtı verdi (%10 Web İndirimi DAS10)">
-                                                <i class="fa-solid fa-tag text-emerald-600"></i> %10 Web İndirimi (DAS10)
-                                            </span>
-                                        </div>
-                                        {% endif %}
-                                    </td>
-                                    <td class="py-2.5 px-2">
-                                        <div class="flex items-center gap-1.5 flex-wrap">
-                                            {% if r.language == 'de' %}
-                                                <span class="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap" title="Almanca (Almanya/Avusturya/İsviçre)">🇩🇪 DE{% if r.booker_country %} ({{ r.booker_country }}){% endif %}</span>
-                                            {% elif r.language == 'ru' %}
-                                                <span class="bg-indigo-100 text-indigo-900 border border-indigo-300 text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap" title="Rusça (Rusya/Kazakistan/Ukrayna)">🇷🇺 RU{% if r.booker_country %} ({{ r.booker_country }}){% endif %}</span>
-                                            {% elif r.language == 'tr' %}
-                                                <span class="bg-rose-100 text-rose-900 border border-rose-300 text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap" title="Türkçe / Azerice">🇹🇷 TR{% if r.booker_country %} ({{ r.booker_country }}){% endif %}</span>
-                                            {% else %}
-                                                <span class="bg-blue-100 text-blue-900 border border-blue-300 text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap" title="İngilizce (Uluslararası)">🇬🇧 EN{% if r.booker_country %} ({{ r.booker_country }}){% endif %}</span>
-                                            {% endif %}
-                                            <input type="text" id="phone_res_{{ loop.index }}" value="{{ r.guest_phone }}" placeholder="+905..." 
-                                                   class="w-28 sm:w-32 px-2 py-1 text-xs border border-slate-300 rounded-lg outline-none focus:ring-1 focus:ring-emerald-500 font-mono bg-white">
-                                            <button onclick="sendWelcome('{{ r.uid }}', 'phone_res_{{ loop.index }}')" title="Karşılama / Wi-Fi Mesajı Gönder (Otomatik Kendi Dilinde)"
-                                                    class="{% if r.notified_welcome %}bg-slate-800 hover:bg-slate-700 text-slate-300{% else %}bg-emerald-600 hover:bg-emerald-500 text-white{% endif %} text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1 transition shadow-xs whitespace-nowrap cursor-pointer">
-                                                <i class="fa-brands fa-whatsapp text-emerald-400"></i> {% if r.notified_welcome %}İletildi ✓{% else %}Karşıla{% endif %}
-                                            </button>
-                                            <button onclick="resendBookingAlert('{{ r.uid }}')" title="Bu rezervasyonun 'Yeni Rezervasyon Düştü' bildirimini WhatsApp'a tekrar gönder"
-                                                    class="bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 text-[11px] px-2 py-1 rounded-lg font-medium flex items-center gap-1 transition shadow-xs whitespace-nowrap cursor-pointer">
-                                                <i class="fa-solid fa-bell text-violet-500"></i> Bildir
-                                            </button>
-                                            <button onclick="sendExtension('{{ r.uid }}')" title="Misafire 1 Gece İndirimli Uzatma Teklifi Gönder (Otomatik Kendi Dilinde)"
-                                                    class="{% if r.notified_extension %}bg-slate-800 hover:bg-slate-700 text-slate-300{% else %}bg-amber-500 hover:bg-amber-600 text-white{% endif %} text-[11px] px-2 py-1 rounded-lg font-medium flex items-center gap-1 transition shadow-xs whitespace-nowrap cursor-pointer">
-                                                <i class="fa-solid fa-gift text-amber-200"></i> {% if r.notified_extension %}Uzatıldı ✓{% else %}Uzat{% endif %}
-                                            </button>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-2 text-xs text-slate-400">{{ r.created_at }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-800">🇩🇪 Almanca (DE)</span>
+                                <span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-mono">de/at/ch</span>
+                            </div>
+                            <button onclick="testSandboxSample('welcome', 'de')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer">
+                                <i class="fa-brands fa-whatsapp text-emerald-300"></i> Almanca Karşıla
+                            </button>
+                        </div>
+
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-800">🇬🇧 İngilizce (EN)</span>
+                                <span class="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-mono">gb/nl/int</span>
+                            </div>
+                            <button onclick="testSandboxSample('welcome', 'en')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer">
+                                <i class="fa-brands fa-whatsapp text-emerald-300"></i> İngilizce Karşıla
+                            </button>
+                        </div>
+
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-800">🇷🇺 Rusça (RU)</span>
+                                <span class="text-[10px] bg-rose-100 text-rose-800 px-2 py-0.5 rounded font-mono">ru/kz/ua</span>
+                            </div>
+                            <button onclick="testSandboxSample('welcome', 'ru')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer">
+                                <i class="fa-brands fa-whatsapp text-emerald-300"></i> Rusça Karşıla
+                            </button>
+                        </div>
+
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-800">🇹🇷 Türkçe (TR)</span>
+                                <span class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-mono">tr/az</span>
+                            </div>
+                            <button onclick="testSandboxSample('welcome', 'tr')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer">
+                                <i class="fa-brands fa-whatsapp text-emerald-300"></i> Türkçe Karşıla
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Çok Dilli Test Laboratuvarı (Safe Multilingual Sandbox Testing) -->
-                <div class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-6 border border-indigo-500/30 shadow-xl space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-indigo-900/60 pb-4">
-                        <div class="flex items-center gap-3">
-                            <div class="bg-indigo-500/20 text-indigo-400 p-2.5 rounded-xl border border-indigo-500/30">
-                                <i class="fa-solid fa-flask-vial text-xl"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-base font-bold text-white flex items-center gap-2">
-                                    🧪 Çok Dilli Test Laboratuvarı <span class="text-[10px] bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-semibold">🛡️ %100 Güvenli Sandbox</span>
-                                </h3>
-                                <p class="text-xs text-indigo-200/70">Misafirleri rahatsız etmeden tüm dillerdeki şablonları anında yöneticinin telefonuna test gönderin</p>
-                            </div>
-                        </div>
+                <!-- 2. Bölüm: 1 Gece Uzatma (€75) ve Kupon Onayı Testleri -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                    <div class="border-b pb-3 flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="bg-slate-800/90 border border-slate-700 text-emerald-400 px-3 py-1.5 rounded-lg text-xs font-mono font-medium flex items-center gap-1.5">
-                                <i class="fa-solid fa-mobile-screen"></i> Hedef Test No: <b>{{ config.test_phone }}</b>
-                            </span>
+                            <span class="p-2 bg-amber-100 text-amber-700 rounded-xl"><i class="fa-solid fa-gift text-lg"></i></span>
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-sm">Konaklama Uzatma & İndirim Onayı</h3>
+                                <p class="text-xs text-slate-500">1 Gece özel nakit teklif (€75) ve "EVET" indirim kuponları</p>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- 1. Satır: 4 Dilde Karşılama & %10 Kupon Test Butonları -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
-                        <!-- 🇩🇪 Almanca Karşılama -->
-                        <div class="bg-slate-800/60 border border-slate-700/80 rounded-xl p-3 flex flex-col justify-between space-y-2.5">
-                            <div>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-bold text-white flex items-center gap-1.5">🇩🇪 Almanca (DE)</span>
-                                    <span class="text-[10px] bg-amber-400/20 text-amber-300 px-1.5 py-0.5 rounded font-mono">de/at/ch</span>
-                                </div>
-                                <p class="text-[11px] text-slate-400 mt-1">Wi-Fi, Google Maps + %10 DAS10 Kuponu</p>
-                            </div>
-                            <button onclick="testSandboxSample('welcome', 'de')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-1.5 px-2.5 rounded-lg text-xs flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer">
-                                <i class="fa-brands fa-whatsapp text-emerald-400"></i> Almanca Karşıla
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button onclick="testSandboxSample('extension', 'de')" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer">
+                                <span>🇩🇪 Almanca 1 Gece Uzatma (€75)</span>
+                            </button>
+                            <button onclick="testSandboxSample('extension', 'ru')" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer">
+                                <span>🇷🇺 Rusça 1 Gece Uzatma (€75)</span>
                             </button>
                         </div>
 
-                        <!-- 🇬🇧 İngilizce Karşılama -->
-                        <div class="bg-slate-800/60 border border-slate-700/80 rounded-xl p-3 flex flex-col justify-between space-y-2.5">
-                            <div>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-bold text-white flex items-center gap-1.5">🇬🇧 İngilizce (EN)</span>
-                                    <span class="text-[10px] bg-blue-400/20 text-blue-300 px-1.5 py-0.5 rounded font-mono">gb/nl/int</span>
-                                </div>
-                                <p class="text-[11px] text-slate-400 mt-1">Wi-Fi, Google Maps + %10 DAS10 Kuponu</p>
-                            </div>
-                            <button onclick="testSandboxSample('welcome', 'en')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-1.5 px-2.5 rounded-lg text-xs flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer">
-                                <i class="fa-brands fa-whatsapp text-emerald-400"></i> İngilizce Karşıla
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button onclick="testSandboxSample('extension', 'en')" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer">
+                                <span>🇬🇧 İngilizce 1 Gece Uzatma (€75)</span>
+                            </button>
+                            <button onclick="testSandboxSample('extension', 'tr')" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 py-2.5 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition cursor-pointer">
+                                <span>🇹🇷 Türkçe 1 Gece Uzatma (€75)</span>
                             </button>
                         </div>
 
-                        <!-- 🇷🇺 Rusça Karşılama -->
-                        <div class="bg-slate-800/60 border border-slate-700/80 rounded-xl p-3 flex flex-col justify-between space-y-2.5">
-                            <div>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-bold text-white flex items-center gap-1.5">🇷🇺 Rusça (RU)</span>
-                                    <span class="text-[10px] bg-rose-400/20 text-rose-300 px-1.5 py-0.5 rounded font-mono">ru/kz/ua</span>
-                                </div>
-                                <p class="text-[11px] text-slate-400 mt-1">Wi-Fi, Google Maps + %10 DAS10 Kuponu</p>
-                            </div>
-                            <button onclick="testSandboxSample('welcome', 'ru')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-1.5 px-2.5 rounded-lg text-xs flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer">
-                                <i class="fa-brands fa-whatsapp text-emerald-400"></i> Rusça Karşıla
-                            </button>
-                        </div>
-
-                        <!-- 🇹🇷 Türkçe Karşılama -->
-                        <div class="bg-slate-800/60 border border-slate-700/80 rounded-xl p-3 flex flex-col justify-between space-y-2.5">
-                            <div>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-bold text-white flex items-center gap-1.5">🇹🇷 Türkçe (TR)</span>
-                                    <span class="text-[10px] bg-emerald-400/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono">tr/az</span>
-                                </div>
-                                <p class="text-[11px] text-slate-400 mt-1">Wi-Fi, Google Maps + %10 DAS10 Kuponu</p>
-                            </div>
-                            <button onclick="testSandboxSample('welcome', 'tr')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-1.5 px-2.5 rounded-lg text-xs flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer">
-                                <i class="fa-brands fa-whatsapp text-emerald-400"></i> Türkçe Karşıla
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 2. Satır: Hızlı Uzatma ve İndirim Onayı Testleri -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-800/80">
-                        <button onclick="testSandboxSample('extension', 'de')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
-                            <span>🇩🇪 Almanca 1 Gece Uzatma (€75)</span>
-                        </button>
-                        <button onclick="testSandboxSample('extension', 'ru')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
-                            <span>🇷🇺 Rusça 1 Gece Uzatma (€75)</span>
-                        </button>
-                        <button onclick="testSandboxSample('discount', 'de')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-300 py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
-                            <i class="fa-solid fa-gift text-emerald-400"></i> %10 DAS10 Onay Mesajı
+                        <button onclick="testSandboxSample('discount', 'de')" class="w-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer shadow-xs">
+                            <i class="fa-solid fa-tag text-emerald-600"></i> Misafir "EVET" Yazınca Gidecek %10 DAS10 Kuponu Test Et
                         </button>
                     </div>
                 </div>
 
-                <!-- Mevsimsel Fırsat & Uçuş Kampanyası (Akıllı Pazarlama Modülü) -->
-                <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-6 border border-slate-700 shadow-lg space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-700 pb-4">
-                        <div class="flex items-center gap-3">
-                            <div class="bg-amber-500/20 text-amber-400 p-2.5 rounded-xl border border-amber-500/30">
-                                <i class="fa-solid fa-plane-departure text-xl"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-base font-bold text-white flex items-center gap-2">
-                                    Mevsimsel Fırsat & Uçuş Kampanyası <span class="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full font-semibold">CRM Pazarlama</span>
-                                </h3>
-                                <p class="text-xs text-slate-400">Eski misafirlerinize sezona ve Dalaman uçuş fırsatlarına özel WhatsApp teklifi gönderin</p>
-                            </div>
+            </div>
+
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- 3. SEKME: 📢 CRM & MEVSİMSEL UÇUŞ KAMPANYALARI -->
+        <!-- ========================================================================= -->
+        <div id="tab-crm" class="tab-content hidden space-y-6">
+            
+            <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-6 sm:p-8 border border-slate-700 shadow-lg space-y-5">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-700 pb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-amber-500/20 text-amber-400 p-3 rounded-2xl border border-amber-500/30">
+                            <i class="fa-solid fa-plane-departure text-2xl"></i>
                         </div>
-                        <div class="flex items-center gap-2 text-xs">
-                            <span class="bg-slate-800 border border-slate-700 text-emerald-400 px-3 py-1 rounded-lg font-medium flex items-center gap-1.5">
-                                <i class="fa-solid fa-shield-halved"></i> 10sn Anti-Spam Korumalı
-                            </span>
+                        <div>
+                            <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                                Mevsimsel Fırsat & Uçuş Kampanyası Modülü
+                                <span class="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full font-semibold">CRM Pazarlama</span>
+                            </h2>
+                            <p class="text-xs text-slate-400">Eski misafirlerinize sezona ve Dalaman uçuş fırsatlarına özel WhatsApp teklifleri iletin</p>
                         </div>
                     </div>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="bg-slate-800 border border-slate-700 text-emerald-400 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5">
+                            <i class="fa-solid fa-shield-halved"></i> 10sn Anti-Spam Güvenlik Korumalı
+                        </span>
+                    </div>
+                </div>
 
-                    <form id="campaignForm" onsubmit="submitCampaign(event)" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 mb-1">Hazır Mevsimsel Kampanya Teması</label>
-                                <select id="campaignPresetSelect" onchange="onPresetChange()" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer">
-                                    <option value="autumn">🍂 Sonbahar: Dalaman'da Deniz Hala Sıcacık & Ucuz Uçuşlar (Ekim-Kasım)</option>
-                                    <option value="winter">❄️ Kış & Termal: Sultaniye Kaplıcaları & Erken Rezervasyon (Aralık-Şubat)</option>
-                                    <option value="spring">🌸 İlkbahar: Likya Yolu Yürüyüşleri & Sezon Açılışı (Mart-Mayıs)</option>
-                                    <option value="summer">☀️ Yaz: Sarıgerme Kumsalları & Göcek Koyları (Haziran-Ağustos)</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-300 mb-1">Hedef Alıcılar</label>
-                                <select id="campaignTargetSelect" name="target" onchange="onTargetChange()" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer">
-                                    <option value="opted_in">🎯 Karşılama İletilmiş / Onay Vermiş Misafirler (Önerilen)</option>
-                                    <option value="all_phones">👥 Rehberdeki Tüm Kayıtlı Misafirler</option>
-                                    <option value="custom">📱 Özel Tek Bir Numaraya Test Gönder</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div id="customPhoneRow" class="hidden">
-                            <label class="block text-xs font-semibold text-slate-300 mb-1">Test Gönderilecek Telefon Numarası</label>
-                            <input type="text" id="campaignCustomPhone" name="custom_phone" placeholder="+905423674599" 
-                                   class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 font-mono outline-none focus:ring-2 focus:ring-amber-500">
+                <form id="campaignForm" onsubmit="submitCampaign(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Hazır Mevsimsel Kampanya Teması</label>
+                            <select id="campaignPresetSelect" onchange="onPresetChange()" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer">
+                                <option value="autumn">🍂 Sonbahar: Dalaman'da Deniz Hala Sıcacık & Ucuz Uçuşlar (Ekim-Kasım)</option>
+                                <option value="winter">❄️ Kış & Termal: Sultaniye Kaplıcaları & Erken Rezervasyon (Aralık-Şubat)</option>
+                                <option value="spring">🌸 İlkbahar: Likya Yolu Yürüyüşleri & Sezon Açılışı (Mart-Mayıs)</option>
+                                <option value="summer">☀️ Yaz: Sarıgerme Kumsalları & Göcek Koyları (Haziran-Ağustos)</option>
+                            </select>
                         </div>
 
                         <div>
-                            <div class="flex justify-between items-center mb-1">
-                                <label class="block text-xs font-semibold text-slate-300">Gönderilecek WhatsApp Mesaj Metni</label>
-                                <span class="text-[11px] text-slate-400">Google Flights DLM linki otomatiktir</span>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Hedef Alıcı Kitlesi</label>
+                            <select id="campaignTargetSelect" name="target" onchange="onTargetChange()" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer">
+                                <option value="opted_in">🎯 Karşılama İletilmiş / Onay Vermiş Misafirler (Önerilen)</option>
+                                <option value="all_phones">👥 Rehberdeki Tüm Kayıtlı Misafirler</option>
+                                <option value="custom">📱 Özel Tek Bir Numaraya Test Gönder</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="customPhoneRow" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Test Gönderilecek Telefon Numarası</label>
+                        <input type="text" id="campaignCustomPhone" name="custom_phone" placeholder="+905423674599" 
+                               class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 font-mono outline-none focus:ring-2 focus:ring-amber-500">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-semibold text-slate-300">Gönderilecek WhatsApp Mesaj Metni</label>
+                            <span class="text-[11px] text-slate-400">Google Flights Dalaman linki ve %15 indirim içerir</span>
+                        </div>
+                        <textarea id="campaignMessageText" name="message" rows="6" required
+                                  class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-3 font-sans outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-2">
+                        <p class="text-[11px] text-slate-400">
+                            <i class="fa-solid fa-circle-info text-amber-400 mr-1"></i> Test Modu açıkken kampanya misafirlere gitmez, sadece yöneticinin telefonuna önizleme gelir.
+                        </p>
+                        <button type="submit" id="campaignSubmitBtn" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-xs flex items-center gap-2 transition shadow-md cursor-pointer whitespace-nowrap">
+                            <i class="fa-solid fa-paper-plane"></i> Kampanyayı Başlat (10sn Güvenli)
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- 4. SEKME: ⚙️ AYARLAR, ENTEGRASYON & LOGLAR -->
+        <!-- ========================================================================= -->
+        <div id="tab-settings" class="tab-content hidden space-y-6">
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Sol Taraf: Sistem Ayarları & Şablonlar Formu (2 Kolon) -->
+                <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                    <div class="border-b pb-3">
+                        <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-indigo-600"></i> Sistem Ayarları & Mesaj Parametreleri
+                        </h2>
+                        <p class="text-xs text-slate-500">Wi-Fi, Giriş-Çıkış saatleri, bildirim numaraları ve fiyatlandırma</p>
+                    </div>
+
+                    <form id="settingsForm" onsubmit="saveSettings(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tesis / Oda Adı</label>
+                                <input type="text" name="suite_name" value="{{ config.suite_name }}" required
+                                       class="w-full px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
                             </div>
-                            <textarea id="campaignMessageText" name="message" rows="6" required
-                                      class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-3 font-sans outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Yönetici WhatsApp Numaraları</label>
+                                <input type="text" name="phone_numbers" value="{{ config.phone_numbers }}" required
+                                       class="w-full px-3 py-2 border rounded-xl text-xs font-mono focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <p class="text-[10px] text-slate-400 mt-1">Virgülle ayırın: <code>+90542...,+90532...</code></p>
+                            </div>
                         </div>
 
-                        <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-2">
-                            <p class="text-[11px] text-slate-400">
-                                <i class="fa-solid fa-circle-info text-amber-400 mr-1"></i> WhatsApp hesabınızın banlanmaması için her mesaj arasında 10 saniyelik doğal gecikme uygulanır.
+                        <!-- Wi-Fi & Giriş Saatleri -->
+                        <div class="border-t pt-3 space-y-3">
+                            <p class="text-xs font-bold text-slate-800 uppercase flex items-center gap-1.5">
+                                <i class="fa-solid fa-wifi text-indigo-500"></i> Wi-Fi & Giriş-Çıkış Bilgileri
                             </p>
-                            <button type="submit" id="campaignSubmitBtn" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 transition shadow-md cursor-pointer whitespace-nowrap">
-                                <i class="fa-solid fa-paper-plane"></i> Kampanyayı Başlat (10sn Güvenli)
-                            </button>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 mb-1">Wi-Fi Adı (SSID)</label>
+                                    <input type="text" name="wifi_name" value="{{ config.wifi_name or 'VODAFONE_9P1076' }}" required
+                                           class="w-full px-2.5 py-1.5 border rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 mb-1">Wi-Fi Şifresi</label>
+                                    <input type="text" name="wifi_password" value="{{ config.wifi_password or 'y4b44CckUkHECRcd' }}" required
+                                           class="w-full px-2.5 py-1.5 border rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 mb-1">Check-in Saati</label>
+                                    <input type="text" name="checkin_hour" value="{{ config.checkin_hour or '15:00' }}" required
+                                           class="w-full px-2.5 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-700 mb-1">Check-out Saati</label>
+                                    <input type="text" name="checkout_hour" value="{{ config.checkout_hour or '11:00' }}" required
+                                           class="w-full px-2.5 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Google Maps Konum Linki</label>
+                                <input type="text" name="maps_url" value="{{ config.maps_url or 'https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla' }}" required
+                                       class="w-full px-2.5 py-1.5 border rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
                         </div>
+
+                        <!-- Konaklama Uzatma & Hatırlatma -->
+                        <div class="border-t pt-3 space-y-3 bg-amber-50/60 p-3.5 rounded-xl border border-amber-100">
+                            <div class="flex items-center justify-between">
+                                <p class="text-xs font-bold text-amber-900 uppercase flex items-center gap-1.5">
+                                    <i class="fa-solid fa-gift text-amber-500"></i> Akıllı Konaklama Uzatma (Upsell)
+                                </p>
+                                <select name="extension_enabled" class="text-[11px] font-semibold bg-white border border-amber-300 text-amber-900 rounded-lg px-2 py-0.5 outline-none">
+                                    <option value="1" {% if config.extension_enabled != '0' %}selected{% endif %}>Otomatik: Açık</option>
+                                    <option value="0" {% if config.extension_enabled == '0' %}selected{% endif %}>Otomatik: Kapalı</option>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[10px] font-semibold text-slate-700 mb-0.5">Uzatma Teklif Fiyatı</label>
+                                    <input type="text" name="extension_price" value="{{ config.extension_price or '€75' }}" required
+                                           class="w-full px-2.5 py-1 border rounded-lg text-xs font-semibold text-emerald-700 outline-none focus:ring-2 focus:ring-amber-500 bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-semibold text-slate-700 mb-0.5">Teklif Saati (Akşam)</label>
+                                    <input type="text" name="extension_time" value="{{ config.extension_time or '20:00' }}" required
+                                           class="w-full px-2.5 py-1 border rounded-lg text-xs font-semibold outline-none focus:ring-2 focus:ring-amber-500 bg-white">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="border-t pt-3">
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Booking.com iCal Takvim Linki (.ics)</label>
+                            <input type="text" name="ical_url" value="{{ config.ical_url }}" required
+                                   class="w-full px-3 py-2 border rounded-xl text-xs font-mono focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+
+                        <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-check"></i> Ayarları ve Parametreleri Kaydet
+                        </button>
                     </form>
                 </div>
 
-                <!-- WordPress Web Sitesi WhatsApp Buton Entegrasyonu & Takip Rehberi -->
-                <div class="bg-white rounded-2xl p-6 border border-emerald-200 shadow-sm space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-100 pb-3">
-                        <div class="flex items-center gap-2.5">
+                <!-- Sağ Taraf: WordPress Buton Takibi, Gateway & Sistem Logları (1 Kolon) -->
+                <div class="space-y-6">
+                    
+                    <!-- WordPress Web Sitesi Buton Entegrasyonu -->
+                    <div class="bg-white rounded-2xl p-6 border border-emerald-200 shadow-sm space-y-3">
+                        <div class="flex items-center gap-2.5 border-b pb-3">
                             <div class="bg-emerald-100 text-emerald-700 p-2 rounded-xl">
                                 <i class="fa-brands fa-wordpress text-lg"></i>
                             </div>
                             <div>
-                                <h3 class="text-sm font-bold text-slate-900">WordPress Web Sitesi WhatsApp Buton Takip Linki</h3>
-                                <p class="text-xs text-slate-500">dalamanairportsuites.com sitenizdeki butona bu linki koyun, bot gelen her rezervasyonu otomatik tanısın!</p>
+                                <h3 class="text-sm font-bold text-slate-900">WordPress WhatsApp Takip Linki</h3>
+                                <p class="text-[11px] text-slate-500">dalamanairportsuites.com için hazır link</p>
                             </div>
                         </div>
-                        <span class="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded-lg">
-                            %10 Kupon: DAS10
-                        </span>
-                    </div>
 
-                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
-                        <p class="text-xs text-slate-700 font-medium leading-relaxed">
-                            📌 <b>Nasıl Çalışır?</b> Sitenizdeki WhatsApp butonunun link adresini aşağıdaki gibi yaptığınızda, misafir butona bastığı anda WhatsApp mesaj kutusunda otomatik olarak bu metin hazır gelir. Misafir gönderdiğinde botumuz bunu yakalar ve size <b>"🎉 Web Sitesinden %10 İndirimli Rezervasyon Talebi Geldi!"</b> alarmı verir.
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            Web sitenizdeki WhatsApp butonuna aşağıdaki link tanımlanmıştır. Misafir butona bastığı anda %10 indirimle talep gönderir ve bot bunu otomatik yakalar.
                         </p>
+
                         <div class="flex items-center gap-2">
                             <input type="text" readonly id="wpWaLinkInput" 
                                    value="https://wa.me/905423674599?text=Merhaba,%20dalamanairportsuites.com%20üzerinden%20%2510%20indirimli%20(DAS10)%20rezervasyon%20yaptırmak%20istiyorum." 
-                                   class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-800 outline-none focus:ring-1 focus:ring-emerald-500 select-all">
+                                   class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-[11px] font-mono text-slate-800 outline-none select-all">
                             <button type="button" onclick="copyWpWaLink()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1 shrink-0 transition cursor-pointer">
-                                <i class="fa-regular fa-copy"></i> Kopyala
+                                <i class="fa-regular fa-copy"></i>
                             </button>
                         </div>
                     </div>
+
+                    <!-- Canlı Sistem Olay Günlüğü (Son 15 İşlem) -->
+                    <div class="bg-slate-900 text-slate-300 rounded-2xl p-6 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <h3 class="text-xs font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-terminal text-emerald-400"></i> Sistem Olay Günlüğü
+                            </h3>
+                            <span class="text-[10px] text-slate-400">Canlı Veri</span>
+                        </div>
+                        <div class="space-y-2 text-[11px] font-mono max-h-72 overflow-y-auto">
+                            {% for log in logs %}
+                            <div class="flex items-start gap-2 border-b border-slate-800/50 pb-1.5">
+                                <span class="text-slate-500 shrink-0 text-[10px]">{{ log.time.split(' ')[1] }}</span>
+                                {% if log.status == 'success' %}
+                                    <span class="text-emerald-400 font-semibold shrink-0 text-[10px]">[OK]</span>
+                                {% elif log.status == 'error' %}
+                                    <span class="text-rose-400 font-semibold shrink-0 text-[10px]">[ERR]</span>
+                                {% else %}
+                                    <span class="text-blue-400 font-semibold shrink-0 text-[10px]">[INFO]</span>
+                                {% endif %}
+                                <span class="text-slate-300 break-words">{{ log.msg }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
                 </div>
 
-                <!-- Canlı Sistem Olay Günlüğü (Rezervasyonların Altında) -->
-                <div class="bg-slate-900 text-slate-300 rounded-2xl p-6 shadow-sm">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-terminal text-emerald-400"></i> Sistem Olay Günlüğü (Son 15 İşlem)
-                        </h3>
-                        <span class="text-xs text-slate-500">Canlı Veri</span>
-                    </div>
-                    <div class="space-y-2 text-xs font-mono max-h-56 overflow-y-auto">
-                        {% for log in logs %}
-                        <div class="flex items-start gap-3">
-                            <span class="text-slate-500 shrink-0">{{ log.time }}</span>
-                            {% if log.status == 'success' %}
-                                <span class="text-emerald-400 font-semibold shrink-0">[BAŞARILI]</span>
-                            {% elif log.status == 'error' %}
-                                <span class="text-rose-400 font-semibold shrink-0">[HATA]</span>
-                            {% else %}
-                                <span class="text-blue-400 font-semibold shrink-0">[BİLGİ]</span>
-                            {% endif %}
-                            <span class="text-slate-300 break-words">{{ log.msg }}</span>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sağ Taraf: Ayarlar Formu (1 Kolon) -->
-            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4 h-fit">
-                <div class="border-b pb-3">
-                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <i class="fa-solid fa-sliders text-slate-500"></i> Sistem Ayarları & Şablonlar
-                    </h2>
-                    <p class="text-xs text-slate-500">WhatsApp Numaraları, Saatler ve Özel Mesajlar</p>
-                </div>
-
-                <form id="settingsForm" onsubmit="saveSettings(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tesis / Oda Adı</label>
-                        <input type="text" name="suite_name" value="{{ config.suite_name }}" required
-                               class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">WhatsApp Numaraları / Grup</label>
-                        <input type="text" name="phone_numbers" value="{{ config.phone_numbers }}" required
-                               class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                        <p class="text-[11px] text-slate-400 mt-1">Aralarına virgül koyun: <code>+90542...,+90532...</code> veya Grup ID</p>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Sabah Hatırlatma Saati</label>
-                        <input type="time" name="morning_time" value="{{ config.morning_time }}" required
-                               class="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                        <p class="text-[11px] text-slate-400 mt-1">Giriş ve Çıkış mesajları bu saatte atılır.</p>
-                    </div>
-
-                    <!-- Wi-Fi ve Karşılama Ayarları Bölümü -->
-                    <div class="border-t pt-3 space-y-3">
-                        <p class="text-xs font-bold text-slate-800 uppercase flex items-center gap-1.5">
-                            <i class="fa-solid fa-wifi text-blue-500"></i> Wi-Fi & Giriş Bilgileri
-                        </p>
-                        
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Wi-Fi Adı (SSID)</label>
-                                <input type="text" name="wifi_name" value="{{ config.wifi_name or 'VODAFONE_9P1076' }}" required
-                                       class="w-full px-2.5 py-1.5 border rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Wi-Fi Şifresi</label>
-                                <input type="text" name="wifi_password" value="{{ config.wifi_password or 'y4b44CckUkHECRcd' }}" required
-                                       class="w-full px-2.5 py-1.5 border rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Giriş Saati (Check-in)</label>
-                                <input type="text" name="checkin_hour" value="{{ config.checkin_hour or '15:00' }}" required
-                                       class="w-full px-2.5 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Çıkış Saati (Check-out)</label>
-                                <input type="text" name="checkout_hour" value="{{ config.checkout_hour or '11:00' }}" required
-                                       class="w-full px-2.5 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">Google Maps Konum Linki</label>
-                            <input type="text" name="maps_url" value="{{ config.maps_url or 'https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla' }}" required
-                                   class="w-full px-2.5 py-1.5 border rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                    </div>
-
-                    <!-- Akıllı Konaklama Uzatma (Upsell) Ayarları -->
-                    <div class="border-t pt-3 space-y-2 bg-amber-50/60 p-3 rounded-xl border border-amber-100">
-                        <div class="flex items-center justify-between">
-                            <p class="text-xs font-bold text-amber-900 uppercase flex items-center gap-1.5">
-                                <i class="fa-solid fa-gift text-amber-500"></i> Akıllı Konaklama Uzatma (Upsell)
-                            </p>
-                            <select name="extension_enabled" class="text-[11px] font-semibold bg-white border border-amber-300 text-amber-900 rounded-lg px-2 py-0.5 outline-none">
-                                <option value="1" {% if config.extension_enabled != '0' %}selected{% endif %}>Otomatik: Açık</option>
-                                <option value="0" {% if config.extension_enabled == '0' %}selected{% endif %}>Otomatik: Kapalı</option>
-                            </select>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-[10px] font-semibold text-slate-700 mb-0.5">Uzatma Teklif Fiyatı</label>
-                                <input type="text" name="extension_price" value="{{ config.extension_price or '€75' }}" required
-                                       class="w-full px-2.5 py-1 border rounded-lg text-xs font-semibold text-emerald-700 outline-none focus:ring-2 focus:ring-amber-500 bg-white">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-semibold text-slate-700 mb-0.5">Teklif Saati (Akşam)</label>
-                                <input type="text" name="extension_time" value="{{ config.extension_time or '20:00' }}" required
-                                       class="w-full px-2.5 py-1 border rounded-lg text-xs font-semibold outline-none focus:ring-2 focus:ring-amber-500 bg-white">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Özel Mesaj Şablonları Bölümü -->
-                    <div class="border-t pt-3 space-y-3">
-                        <p class="text-xs font-bold text-slate-800 uppercase flex items-center gap-1.5">
-                            <i class="fa-regular fa-message text-emerald-500"></i> Özel Mesaj Şablonları
-                        </p>
-                        <p class="text-[11px] text-slate-500">Etiketler: <code>{suite_name}</code>, <code>{tomorrow_date}</code>, <code>{extension_price}</code>, <code>{checkin}</code>, <code>{checkout}</code>, <code>{wifi_name}</code>, <code>{wifi_password}</code></p>
-
-                        <div>
-                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">🎁 Misafire 1 Gece Uzatma Teklifi Şablonu (Ertesi Gün Boşsa)</label>
-                            <textarea name="msg_extension" rows="5" class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-500 font-sans">{{ config.msg_extension }}</textarea>
-                        </div>
-
-                        <div>
-                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">🌟 Misafire Otomatik Karşılama & Wi-Fi Şablonu (veya %7.5 Daveti)</label>
-                            <textarea name="msg_welcome" rows="5" class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 font-sans">{{ config.msg_welcome }}</textarea>
-                        </div>
-
-                        <div>
-                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">🎉 Misafir "EVET/YES" Yazınca Gidecek %10 Web İndirimi Onayı (Kupon: DAS10)</label>
-                            <textarea name="msg_discount_confirmed" rows="4" class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 font-sans">{{ config.msg_discount_confirmed or "🎉 *Congratulations! / Tebrikler!*\n\nYour *%10 DIRECT DISCOUNT* promo code has been activated:\n🏷 *PROMO CODE: DAS10*\n\nHow to redeem your %10 discount:\n✅ Visit our website: https://dalamanairportsuites.com\n✅ Click the WhatsApp button or message us directly here with code *DAS10*\n✅ Save 100% on platform booking fees + get %10 instant discount!\n\n*(Web sitemizdeki WhatsApp butonuna tıklayarak veya doğrudan buradan bize 'DAS10' kodunu ileterek %10 indirimli, komisyonsuz doğrudan rezervasyonunuzu yapabilirsiniz.)*\n\nWishing you a fantastic stay!" }}</textarea>
-                        </div>
-
-                        <div>
-                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">🛎 Yeni Rezervasyon Mesajı</label>
-                            <textarea name="msg_new_booking" rows="3" class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">{{ config.msg_new_booking }}</textarea>
-                        </div>
-
-                        <div>
-                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">🏨 Giriş (Check-in) Hatırlatma Mesajı</label>
-                            <textarea name="msg_checkin" rows="3" class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">{{ config.msg_checkin }}</textarea>
-                        </div>
-
-                        <div>
-                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">🧹 Çıkış (Check-out) Hatırlatma Mesajı</label>
-                            <textarea name="msg_checkout" rows="3" class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500">{{ config.msg_checkout }}</textarea>
-                        </div>
-                    </div>
-
-                    <div class="border-t pt-3">
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Booking iCal Linki (.ics)</label>
-                        <input type="text" name="ical_url" value="{{ config.ical_url }}" required
-                               class="w-full px-3 py-2 border rounded-xl text-xs font-mono focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
-
-
-                    <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-check"></i> Tüm Ayarları ve Şablonları Kaydet
-                    </button>
-                </form>
             </div>
 
         </div>
@@ -682,11 +744,64 @@
     </main>
 
     <script>
+        // Sekme Değiştirme (Tab Switching)
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
+                btn.classList.add('text-slate-600', 'hover:text-slate-900', 'hover:bg-white/80');
+            });
+            
+            const target = document.getElementById('tab-' + tabId);
+            if (target) target.classList.remove('hidden');
+            
+            const activeBtn = document.getElementById('tab-btn-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-600', 'hover:text-slate-900', 'hover:bg-white/80');
+                activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
+            }
+        }
+
+        // Rezervasyon Tablosu Filtreleme (Pills)
+        function filterStatus(status) {
+            document.querySelectorAll('.status-filter-btn').forEach(b => {
+                b.classList.remove('bg-white', 'text-indigo-700', 'shadow-xs');
+                b.classList.add('text-slate-600', 'hover:text-slate-900');
+            });
+            
+            const activePill = event.target;
+            activePill.classList.remove('text-slate-600', 'hover:text-slate-900');
+            activePill.classList.add('bg-white', 'text-indigo-700', 'shadow-xs');
+
+            const rows = document.querySelectorAll('.reservation-row');
+            rows.forEach(r => {
+                if (status === 'all' || r.dataset.status === status) {
+                    r.style.display = '';
+                } else {
+                    r.style.display = 'none';
+                }
+            });
+        }
+
+        // Rezervasyon Tablosu Anlık Arama
+        function searchReservations(query) {
+            const q = query.toLowerCase().trim();
+            const rows = document.querySelectorAll('.reservation-row');
+            rows.forEach(r => {
+                const text = (r.dataset.phone + ' ' + r.dataset.checkin + ' ' + r.dataset.checkout + ' ' + r.dataset.status).toLowerCase();
+                if (!q || text.includes(q)) {
+                    r.style.display = '';
+                } else {
+                    r.style.display = 'none';
+                }
+            });
+        }
+
         function showAlert(msg, isSuccess = true) {
             const box = document.getElementById('alertBox');
             box.className = isSuccess 
-                ? 'p-4 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-800 border border-emerald-200 block'
-                : 'p-4 rounded-xl text-sm font-medium bg-rose-50 text-rose-800 border border-rose-200 block';
+                ? 'p-4 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-800 border border-emerald-200 block shadow-sm'
+                : 'p-4 rounded-xl text-sm font-medium bg-rose-50 text-rose-800 border border-rose-200 block shadow-sm';
             box.innerText = msg;
             setTimeout(() => { box.className = 'hidden'; }, 5000);
         }
@@ -726,20 +841,8 @@
             }
         }
 
-        async function resendLatestAlert() {
-            try {
-                showAlert('Son rezervasyon bildirimi WhatsApp\'a gönderiliyor...', true);
-                const res = await fetch('/api/reservation/resend-new-alert', { method: 'POST' });
-                const json = await res.json();
-                showAlert(json.message, json.status === 'ok');
-                if (json.status === 'ok') setTimeout(() => location.reload(), 1500);
-            } catch (err) {
-                showAlert('Bildirim gönderme hatası: ' + err, false);
-            }
-        }
-
         async function resendBookingAlert(uid) {
-            if (!confirm('Bu rezervasyonun \'Yeni Rezervasyon Düştü\' bildirimi WhatsApp numaralarınıza tekrar gönderilsin mi?')) {
+            if (!confirm('Bu rezervasyonun \'Yeni Rezervasyon Düştü\' bildirimi WhatsApp yöneticilerine tekrar gönderilsin mi?')) {
                 return;
             }
             try {
@@ -749,90 +852,74 @@
                 const res = await fetch('/api/reservation/resend-new-alert', { method: 'POST', body: data });
                 const json = await res.json();
                 showAlert(json.message, json.status === 'ok');
-                if (json.status === 'ok') setTimeout(() => location.reload(), 1500);
             } catch (err) {
-                showAlert('Bildirim gönderme hatası: ' + err, false);
+                showAlert('İletim hatası: ' + err, false);
             }
         }
 
         async function sendWelcome(uid, inputId) {
-            const inputEl = document.getElementById(inputId);
-            const phone = inputEl ? inputEl.value.trim() : '';
+            const phone = document.getElementById(inputId).value;
             if (!phone) {
-                showAlert('Lütfen geçerli bir misafir WhatsApp numarası giriniz (örn: +90542...)', false);
-                if (inputEl) inputEl.focus();
+                showAlert('Lütfen misafir telefon numarasını giriniz.', false);
                 return;
             }
-            if (!confirm(`${phone} numarasına otomatik Karşılama (Self Check-in & Wi-Fi) mesajı gönderilsin mi?`)) {
-                return;
-            }
-            showAlert('Misafire WhatsApp karşılama mesajı gönderiliyor...', true);
-            const data = new FormData();
-            data.append('uid', uid);
-            data.append('phone', phone);
             try {
+                const data = new FormData();
+                data.append('uid', uid);
+                data.append('phone', phone);
                 const res = await fetch('/api/reservation/send-welcome', { method: 'POST', body: data });
                 const json = await res.json();
                 showAlert(json.message, json.status === 'ok');
-                if (json.status === 'ok') {
-                    setTimeout(() => location.reload(), 1500);
-                }
+                if (json.status === 'ok') setTimeout(() => location.reload(), 1500);
             } catch (err) {
-                showAlert('Mesaj gönderme hatası: ' + err, false);
+                showAlert('Gönderim hatası: ' + err, false);
             }
         }
 
         async function sendExtension(uid) {
-            if (!confirm('Misafire 1 Gece indirimli konaklama uzatma teklifi WhatsApp ile gönderilsin mi?')) {
-                return;
-            }
-            showAlert('Uzatma teklifi WhatsApp ile gönderiliyor...', true);
-            const data = new FormData();
-            data.append('uid', uid);
             try {
+                const data = new FormData();
+                data.append('uid', uid);
                 const res = await fetch('/api/reservation/send-extension', { method: 'POST', body: data });
                 const json = await res.json();
                 showAlert(json.message, json.status === 'ok');
-                if (json.status === 'ok') {
-                    setTimeout(() => location.reload(), 1500);
-                }
+                if (json.status === 'ok') setTimeout(() => location.reload(), 1500);
             } catch (err) {
                 showAlert('Uzatma teklifi hatası: ' + err, false);
             }
         }
 
-        // Yerel WhatsApp Gateway Durum & QR Yönetimi
+        // WhatsApp Gateway Durum Kontrolü
         let waCheckInterval = null;
 
         async function checkWaStatus() {
             try {
                 const res = await fetch('/api/whatsapp/status');
                 const data = await res.json();
+                const badge = document.getElementById('waBadge');
                 const dot = document.getElementById('waDot');
                 const text = document.getElementById('waText');
-                const badge = document.getElementById('waBadge');
-                
+                const mStatus = document.getElementById('waModalStatus');
+
                 if (data.status === 'connected') {
-                    dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400';
-                    text.innerText = 'WhatsApp: Bağlı' + (data.phone ? ' (' + data.phone + ')' : '');
-                    badge.className = 'bg-emerald-950/60 border border-emerald-800/80 text-emerald-300 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm cursor-pointer';
-                    
-                    const modalStatus = document.getElementById('waModalStatus');
-                    if (modalStatus) modalStatus.innerText = '✅ Bağlantı Aktif: ' + (data.phone || 'Bağlı');
-                    const qrBox = document.getElementById('waQrContainer');
-                    if (qrBox && !document.getElementById('waModal').classList.contains('hidden')) {
-                        qrBox.innerHTML = '<div class="w-64 h-64 bg-emerald-50 rounded-2xl border border-emerald-200 flex flex-col items-center justify-center text-emerald-800"><i class="fa-solid fa-circle-check text-5xl text-emerald-500 mb-2"></i><span class="font-bold text-sm">WhatsApp Bağlantısı Aktif!</span><span class="text-xs text-slate-500 mt-1">Bildirimler kendi sunucunuzdan gidiyor.</span></div>';
-                    }
+                    dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+                    text.innerText = 'WhatsApp: Bağlı (' + (data.phone ? data.phone.slice(-4) : 'Aktif') + ')';
+                    badge.className = 'bg-slate-800 hover:bg-slate-700 text-emerald-300 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border border-emerald-500/30 shadow-sm cursor-pointer';
+                    if (mStatus) mStatus.innerText = 'Durum: Cihazınız başarıyla bağlı! (' + (data.phone || 'Aktif') + ')';
                 } else if (data.status === 'qr_ready') {
-                    dot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse';
-                    text.innerText = 'WhatsApp: QR Bekleniyor';
-                    badge.className = 'bg-amber-950/60 border border-amber-800/80 text-amber-300 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm cursor-pointer animate-pulse';
+                    dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+                    text.innerText = 'WhatsApp: QR Okutun';
+                    badge.className = 'bg-amber-950/80 hover:bg-amber-900/80 text-amber-300 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border border-amber-500/50 shadow-sm cursor-pointer';
+                    if (mStatus) mStatus.innerText = 'Durum: Karekod hazır, lütfen telefonunuzla okutun.';
                 } else {
-                    dot.className = 'w-2.5 h-2.5 rounded-full bg-rose-400';
+                    dot.className = 'w-2 h-2 rounded-full bg-slate-500';
                     text.innerText = 'WhatsApp: Çevrimdışı';
-                    badge.className = 'bg-rose-950/60 border border-rose-800/80 text-rose-300 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm cursor-pointer';
+                    badge.className = 'bg-slate-800 hover:bg-slate-700 text-slate-400 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border border-slate-700 shadow-sm cursor-pointer';
+                    if (mStatus) mStatus.innerText = 'Durum: Bağlantı bekleniyor...';
                 }
-            } catch (e) {}
+            } catch (err) {
+                console.error('WhatsApp durum hatası:', err);
+            }
         }
 
         async function loadQrCode() {
@@ -840,10 +927,12 @@
                 const res = await fetch('/api/whatsapp/qr');
                 const data = await res.json();
                 const container = document.getElementById('waQrContainer');
-                if (data.qrImage) {
-                    container.innerHTML = `<img src="${data.qrImage}" class="w-64 h-64 p-2 bg-white rounded-2xl shadow-inner border border-slate-200" />`;
+                if (data.qr) {
+                    container.innerHTML = '<img src="' + data.qr + '" alt="WhatsApp QR Code" class="w-64 h-64 rounded-xl border border-slate-200 shadow-sm p-2 bg-white">';
                 }
-            } catch (e) {}
+            } catch (err) {
+                console.error('QR alma hatası:', err);
+            }
         }
 
         function openWhatsAppModal() {
@@ -928,6 +1017,7 @@
 
         function onPresetChange() {
             const select = document.getElementById('campaignPresetSelect');
+            if (!select) return;
             const presetId = select.value;
             const found = campaignPresetsData.find(p => p.id === presetId);
             if (found) {
@@ -951,7 +1041,7 @@
             const formData = new FormData(form);
             const submitBtn = document.getElementById('campaignSubmitBtn');
             
-            if (!confirm('Kampanya mesajı seçilen alıcılara 10 saniyelik güvenli bekleme aralıklarıyla gönderilecektir. Başlatmak istiyor musunuz?')) {
+            if (!confirm('Kampanya mesajı gönderilecektir. Başlatmak istiyor musunuz?')) {
                 return;
             }
 
@@ -977,7 +1067,7 @@
             const input = document.getElementById('wpWaLinkInput');
             input.select();
             navigator.clipboard.writeText(input.value);
-            showAlert('WhatsApp buton takip linki kopyalandı! WordPress sitenizdeki butona yapıştırabilirsiniz.', true);
+            showAlert('WhatsApp takip linki kopyalandı! WordPress sitenizdeki butona yapıştırabilirsiniz.', true);
         }
 
         // Sandbox & Çok Dilli Test Laboratuvarı Fonksiyonları
@@ -991,13 +1081,13 @@
                 const text = document.getElementById('sandboxText');
                 
                 if (json.sandbox_mode === '1') {
-                    btn.className = 'bg-emerald-950/80 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-500/50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer';
-                    dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
-                    text.innerText = '🛡️ Test Modu: AÇIK';
+                    if (btn) btn.className = 'bg-emerald-950/90 hover:bg-emerald-900/90 text-emerald-300 border border-emerald-500/50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer';
+                    if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+                    if (text) text.innerText = '🛡️ Test Modu: AÇIK';
                 } else {
-                    btn.className = 'bg-rose-950/80 hover:bg-rose-900/80 text-rose-300 border border-rose-500/50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer';
-                    dot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500';
-                    text.innerText = '🔴 CANLI MOD';
+                    if (btn) btn.className = 'bg-rose-950/90 hover:bg-rose-900/90 text-rose-300 border border-rose-500/50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer';
+                    if (dot) dot.className = 'w-2 h-2 rounded-full bg-rose-500';
+                    if (text) text.innerText = '🔴 CANLI MOD';
                 }
             } catch (err) {
                 showAlert('Mod değiştirilemedi: ' + err, false);
@@ -1010,6 +1100,7 @@
             formData.append('lang', lang);
             
             try {
+                showAlert('Test mesajı WhatsApp\'a gönderiliyor...', true);
                 const res = await fetch('/api/sandbox/test-sample', {
                     method: 'POST',
                     body: formData
