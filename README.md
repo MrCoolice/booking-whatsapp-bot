@@ -11,7 +11,35 @@ A 100% **self-hosted**, lightweight, and automated bot designed for hotels, apar
 
 Includes a built-in **100% Free Self-Hosted WhatsApp Web Gateway (Baileys)**: no paid third-party APIs, no trial expirations, and zero monthly subscriptions!
 
+![Dalaman Airport Suite Bot Dashboard](dashboard_preview.png)
+
 ---
+
+## 🖥️ Dashboard Overview (What's on the Panel?)
+
+The web dashboard (`http://<SERVER-IP>:8000`) provides real-time control and visibility over your property:
+
+1. **Top Header & Control Bar:**
+   - **Property Title:** Identifies the active suite and server status.
+   - **WhatsApp Gateway Badge:** Shows live connection status (`🟢 WhatsApp: Connected`). Clicking it opens the interactive QR pairing modal to link any WhatsApp number within seconds.
+   - **"Sync Now" (`Şimdi Eşle`):** Manually triggers an immediate Booking.com iCal calendar sync and processes today's check-in/out alerts.
+   - **"Booking Alert Test" (`Rezervasyon Bildirimi Testi` - Violet Button):** Instantly re-dispatches the newest booking notification to all registered WhatsApp numbers.
+   - **"Send Test" (`Test Gönder` - Green Button):** Dispatches a quick system test alert to verify gateway communication.
+
+2. **Today's Status Cards:**
+   - **🔴 Today's Check-outs:** Highlights rooms departing today, check-out times, and housekeeping readiness badges.
+   - **🟢 Today's Check-ins:** Highlights incoming guests, arrival dates, and key handover/police identity registration badges.
+
+3. **Active Reservations Table:**
+   - Displays the last 50 reservations with real-time status badges (*Staying*, *Check-in Today*, *Check-out Today*, *Checked Out*, *Upcoming*).
+   - **Guest Welcome Dispatcher (`Karşıla`):** Input the guest's phone number to send a personalized bilingual (EN/TR) welcome message with Wi-Fi credentials, Google Maps location, and check-in times.
+   - **Re-Notify Button (`[🔔 Bildir]`):** Resends the new reservation WhatsApp alert for that specific booking anytime.
+
+4. **Live System Event Log (Console):**
+   - Displays real-time, timestamped operational logs (calendar poll results, WhatsApp delivery status, error traces) directly in the UI.
+
+5. **Settings & Custom Message Templates Form:**
+   - Configure suite name, destination WhatsApp numbers (multiple numbers or group IDs), morning reminder dispatch hour (`09:00`), and dynamic message templates using `{suite_name}`, `{checkin}`, `{checkout}` variables.
 
 ## 🌟 Key Features
 
@@ -152,7 +180,35 @@ Otel, apart, villa ve butik konaklama tesisleri için geliştirilmiş; **Booking
 
 Sistem, bünyesinde barındırdığı **%100 Ücretsiz Yerel WhatsApp Gateway (Baileys)** sayesinde üçüncü parti ücretli API'lere (UltraMsg, Twilio vb.) aylık abonelik ödemenize gerek kalmadan tamamen kendi sunucunuz üzerinden çalışır!
 
+![Dalaman Airport Suite Bot Yönetim Paneli](dashboard_preview.png)
+
 ---
+
+## 🖥️ Web Yönetim Paneli İncelemesi (Panelde Neler Var?)
+
+Tarayıcınızdan `http://<SUNUCU-IP>:8000` adresine girdiğinizde sizi karşılayan modern arayüz ve bileşenler:
+
+1. **Üst Kontrol & Durum Çubuğu:**
+   - **Tesis Başlığı & Canlı Tarih:** Tesis adı ve güncel sistem tarihini gösterir.
+   - **WhatsApp Bağlantı Rozeti:** Durumu canlı gösterir (`🟢 WhatsApp: Bağlı (Aktif)`). Tıklandığında telefonla hemen okutabileceğiniz **canlı QR kod eşleme penceresini** açar.
+   - **"Şimdi Eşle" Butonu (Mavi):** Booking takvimini hemen indirir ve bugünkü giriş/çıkış kontrollerini anında çalıştırır.
+   - **"Rezervasyon Bildirimi Testi" (Mor Buton):** En son gelen rezervasyonu alıp WhatsApp numaralarınıza *"🛎 YENİ BOOKING REZERVASYONU DÜŞTÜ!"* bildirimini manuel olarak anında tekrar gönderir.
+   - **"Test Gönder" Butonu (Yeşil):** WhatsApp ağ geçidinin ve numaralarınızın çalıştığını doğrulamak için genel bir test mesajı iletir.
+
+2. **Günün Durum Kartları:**
+   - **🔴 Bugün Çıkış (Check-out) Yapacaklar:** O gün tesisten ayrılacak odaları, çıkış saatini ve temizlik hazırlık rozetini gösterir.
+   - **🟢 Bugün Giriş (Check-in) Yapacaklar:** O gün otele giriş yapacak yeni misafirleri ve KBS kimlik kayıt bildirim uyarısını gösterir.
+
+3. **Aktif Rezervasyon Listesi Tablosu:**
+   - Booking takviminden çekilen son 50 rezervasyonun giriş/çıkış tarihleri, sistem kayıt zamanı ve dinamik durum rozetleri (*Konaklıyor*, *Bugün Giriş*, *Bugün Çıkış*, *Çıkış Yaptı*, *Gelecek*).
+   - **Misafir Karşılama (Self Check-in & Wi-Fi):** Misafirin WhatsApp numarasını girip **`[Karşıla]`** butonuna basarak Wi-Fi şifresi, Google Haritalar konumu ve giriş saatlerini içeren çift dilli (Türkçe & İngilizce) karşılama mesajını tek tıkla gönderebilirsiniz.
+   - **`[🔔 Bildir]` Butonu:** İlgili satırdaki rezervasyonun "Yeni Rezervasyon Düştü" WhatsApp bildirimini tek tıkla tekrar tetikler.
+
+4. **Canlı Sistem Olay Günlüğü (Terminal Konsolu):**
+   - Son 15 işlemin (takvim eşlemeleri, başarıyla iletilen WhatsApp mesajları, hata kayıtları) zaman damgalı canlı akışını sunar.
+
+5. **Sistem Ayarları & Özel Mesaj Şablonları:**
+   - Tesis Adı, WhatsApp Numaraları (virgülle birden çok numara veya WhatsApp Grup ID), sabah hatırlatma saati (`09:00`), Wi-Fi bilgileri ve dinamik mesaj şablonları (`{suite_name}`, `{checkin}`, `{checkout}` değişkenleri) tek tıkla düzenlenebilir.
 
 ## 🌟 Öne Çıkan Özellikler
 
@@ -264,20 +320,72 @@ bilgilerini girip **"Tüm Ayarları ve Şablonları Kaydet"** butonuna basmanız
 
 ---
 
-## ⚙️ Servis Yönetimi
+## ⚙️ Servis Yönetimi, Hata Ayıklama & Sunucu Komutları (Troubleshooting & CLI)
 
-Her iki servis de `systemd` ile arka planda kesintisiz çalışır:
+Sistemi yönetirken, test ederken veya olası durumları incelerken kullanabileceğiniz tüm temel ve ileri düzey konsol komutları:
 
+### 1. Servis Durumları ve Canlı Log İzleme
 ```bash
-# Python Web Botu Servisi (Port 8000)
+# Python Web Botu Servisi (FastAPI - Port 8000)
 systemctl status dalaman-bot
 systemctl restart dalaman-bot
-journalctl -u dalaman-bot -f
+journalctl -u dalaman-bot -n 50 --no-pager
+journalctl -u dalaman-bot -f                  # Canlı log takibi
 
-# Yerel WhatsApp Gateway Servisi (Port 3000)
+# Yerel Baileys WhatsApp Gateway Servisi (Node.js - Port 3000)
 systemctl status dalaman-gateway
 systemctl restart dalaman-gateway
-journalctl -u dalaman-gateway -f
+journalctl -u dalaman-gateway -n 50 --no-pager
+journalctl -u dalaman-gateway -f              # Canlı WhatsApp log takibi
+```
+
+### 2. WhatsApp Oturumunu Sıfırlama (Temiz QR Eşleme)
+Eğer WhatsApp'ta *"Mesaj bekleniyor. Bu işlem biraz zaman alabilir"* uyarısı görürseniz veya botu farklı bir telefona bağlamak isterseniz oturumu sıfırlayabilirsiniz:
+```bash
+# Eski anahtarları temizle ve temiz QR kod üret
+systemctl stop dalaman-gateway && rm -rf /opt/dalaman-suite-bot/gateway/auth_info && systemctl restart dalaman-gateway
+```
+*Ardından `http://<IP>:8000` panelinden veya `http://<IP>:3000/qr-view` adresinden yeni QR kodu telefonunuzla okutun.*
+
+### 3. Terminalden Doğrudan API Test ve Manuel Tetikleme Komutları
+Web arayüzüne girmeden doğrudan sunucu içinden komut satırıyla test veya tetikleme yapabilirsiniz:
+```bash
+# 1. Takvimi anında senkronize et ve hatırlatıcıları çalıştır:
+curl -X POST http://127.0.0.1:8000/api/sync-now
+
+# 2. WhatsApp test bildirimi gönder:
+curl -X POST http://127.0.0.1:8000/api/test-whatsapp
+
+# 3. Son rezervasyon bildirimini ("Yeni Rezervasyon Düştü") WhatsApp'a tekrar gönder:
+curl -X POST http://127.0.0.1:8000/api/reservation/resend-new-alert
+
+# 4. WhatsApp Gateway bağlantı durumunu JSON olarak kontrol et:
+curl -s http://127.0.0.1:3000/status
+```
+
+### 4. SQLite Veritabanı İnceleme ve Sorgu Komutları
+Veritabanındaki kayıtları doğrudan terminalden incelemek veya manuel kontrol etmek için:
+```bash
+# Kayıtlı son 5 rezervasyonu listele:
+sqlite3 /opt/dalaman-suite-bot/bot_database.db "SELECT uid, checkin, checkout, notified_new, notified_checkout FROM reservations ORDER BY checkin DESC LIMIT 5;"
+
+# Son 10 sistem olay günlüğünü incele:
+sqlite3 /opt/dalaman-suite-bot/bot_database.db "SELECT timestamp, status, message FROM logs ORDER BY id DESC LIMIT 10;"
+
+# Bir rezervasyonun 'Yeni Rezervasyon' bildirim bayrağını sıfırla (tekrar tetiklemek için):
+sqlite3 /opt/dalaman-suite-bot/bot_database.db "UPDATE reservations SET notified_new = 0 ORDER BY created_at DESC LIMIT 1;"
+```
+
+### 5. Port ve Ağ Durumu Kontrolü
+```bash
+# 8000 (Web Paneli) ve 3000 (WhatsApp Gateway) portlarını kontrol et:
+ss -tulpn | grep -E '8000|3000'
+```
+
+### 6. Tek Komutla Güncelleme Çekme (Update)
+GitHub deposuna yapılan yeni güncellemeleri ve hata düzeltmelerini tek komutla sunucuya almak için:
+```bash
+cd /opt/dalaman-suite-bot && git pull && systemctl restart dalaman-gateway && systemctl restart dalaman-bot
 ```
 
 ---
@@ -299,6 +407,10 @@ Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır. Dilediğiniz gibi geli�
 
 ## 📝 Sürüm Notları / Changelog
 
+- **v1.2.2 (14 Eylül 2026):**
+  - **Manuel Rezervasyon Bildirimi Testi:** Web paneline ve rezervasyon tablosundaki her satıra "Rezervasyon Bildirimi Testi" ve `[🔔 Bildir]` butonları eklendi.
+  - **Uçtan Uca Şifreleme (E2EE) İyileştirmesi:** "Mesaj bekleniyor" gecikmesini önlemek için Baileys `getMessage` retry önbelleği ve çoklu alıcılar arasına 1.5 saniyelik güvenlik aralığı (throttling) eklendi.
+  - **Görsel Web Paneli İncelemesi & Hata Ayıklama Rehberi:** README içerisine sansürlenmiş ekran görüntüsü, yönetim paneli rehberi ve kapsamlı terminal debug komutları eklendi.
 - **v1.2.1 (14 Eylül 2026):**
   - **Sıfır Mesaj Kaçırma Düzeltmesi (Reliable Scheduler):** Dakikalık eşitlik kontrolü (`== morning_time`) yerine veritabanı durumunu baz alan `>= morning_time` zamanlayıcı mantığına geçildi. 2 dakikalık polling aralıklarının sabah 09:00'ı teğet geçmesi sorunu tamamen giderildi.
   - **Kendi Kendini Onarma (Self-Healing):** Sunucu 09:00 sonrasında açılsa bile atılmamış Check-in / Check-out bildirimleri ilk kontrolde anında iletilir.
