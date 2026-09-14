@@ -47,7 +47,9 @@ def init_db():
         ("notified_welcome", "INTEGER DEFAULT 0"),
         ("notified_extension", "INTEGER DEFAULT 0"),
         ("has_discount", "INTEGER DEFAULT 0"),
-        ("discount_code", "TEXT DEFAULT ''")
+        ("discount_code", "TEXT DEFAULT ''"),
+        ("booker_country", "TEXT DEFAULT ''"),
+        ("language", "TEXT DEFAULT 'en'")
     ]:
         try:
             cur.execute(f"ALTER TABLE reservations ADD COLUMN {col} {col_type}")
@@ -64,6 +66,8 @@ def init_db():
     """)
     
     defaults = {
+        "sandbox_mode": "1", # 1: Güvenli Test Modu Açık, 0: Canlı Mod
+        "test_phone": "+905423674599",
         "ical_url": os.getenv("ICAL_URL", ""),
         "phone_numbers": os.getenv("PHONE_NUMBERS", ""),
         "morning_time": "09:00",
@@ -217,6 +221,224 @@ def format_date_str(d_str):
     except:
         return d_str
 
+def detect_guest_language(phone: str, country: str = "") -> str:
+    clean_p = re.sub(r"\D", "", phone or "")
+    c = (country or "").lower().strip()
+    
+    # Turkish / Azeri
+    if clean_p.startswith("90") or clean_p.startswith("994") or c in ["tr", "az"]:
+        return "tr"
+    # German (Germany, Austria, Switzerland)
+    if clean_p.startswith("49") or clean_p.startswith("43") or clean_p.startswith("41") or c in ["de", "at", "ch"]:
+        return "de"
+    # Russian (Russia, Kazakhstan, Ukraine, Belarus)
+    if clean_p.startswith("7") or clean_p.startswith("380") or clean_p.startswith("375") or c in ["ru", "kz", "ua", "by"]:
+        return "ru"
+    # Default English (UK, USA, France, Poland, Middle East, etc.)
+    return "en"
+
+def get_multilingual_welcome(lang: str, params: dict) -> str:
+    if lang == "de":
+        return (
+            "🏨 *Herzlich willkommen in der {suite_name}!* 🌴\n\n"
+            "Lieber Gast, wir freuen uns sehr, Sie bei uns begrüßen zu dürfen. Hier sind Ihre Buchungs- und Anreisedetails:\n\n"
+            "📅 *Termine:* {checkin} ➔ {checkout}\n"
+            "📍 *Adresse:* Ege Mah. Isparta Sok. No: 6/1 Apt: 11, Dalaman / Muğla\n"
+            "🗺 *Google Maps:* {maps_url}\n\n"
+            "🕒 *Check-in:* ab {checkin_hour} Uhr\n"
+            "🚪 *Check-out:* bis {checkout_hour} Uhr\n"
+            "📶 *WLAN (Wi-Fi):* {wifi_name}\n"
+            "🔐 *WLAN-Passwort:* {wifi_password}\n\n"
+            "🎁 *EXKLUSIVES GESCHENK / %10 DIREKTRABATT:*\n"
+            "Antworten Sie einfach auf diese Nachricht mit *\"JA\"* oder *\"YES\"*, um einen *%10 DIREKTRABATT (Gutscheincode: DAS10)* für Verlängerungsnächte oder Ihre nächste Buchung über unsere Website (dalamanairportsuites.com) zu aktivieren!\n\n"
+            "🚗 *Lage:* Nur 10 Minuten vom Flughafen Dalaman (DLM) entfernt.\n"
+            "📞 WhatsApp Direkt: +90 542 367 45 99\n"
+            "🌐 Website: https://dalamanairportsuites.com\n\n"
+            "✨ Wir wünschen Ihnen einen erholsamen Aufenthalt!"
+        ).format(**params)
+    elif lang == "ru":
+        return (
+            "🏨 *Добро пожаловать в {suite_name}!* 🌴\n\n"
+            "Уважаемый гость, мы рады приветствовать вас! Данные вашего бронирования и заезда:\n\n"
+            "📅 *Даты:* {checkin} ➔ {checkout}\n"
+            "📍 *Адрес:* Ege Mah. Isparta Sok. No: 6/1 кв: 11, Dalaman / Muğla\n"
+            "🗺 *Google Maps:* {maps_url}\n\n"
+            "🕒 *Заезд (Check-in):* с {checkin_hour}\n"
+            "🚪 *Выезд (Check-out):* до {checkout_hour}\n"
+            "📶 *Wi-Fi:* {wifi_name}\n"
+            "🔐 *Пароль от Wi-Fi:* {wifi_password}\n\n"
+            "🎁 *СПЕЦИАЛЬНЫЙ ПОДАРОК / СКИДКА %10:*\n"
+            "Ответьте на это сообщение *\"ДА\"* или *\"YES\"*, чтобы активировать *%10 СКИДКУ НА ПРЯМОЕ БРОНИРОВАНИЕ (Промокод: DAS10)* для продления проживания или следующего отдыха через наш сайт (dalamanairportsuites.com)!\n\n"
+            "🚗 *Расположение:* Всего 10 минут от аэропорта Даламан (DLM).\n"
+            "📞 WhatsApp: +90 542 367 45 99\n"
+            "🌐 Сайт: https://dalamanairportsuites.com\n\n"
+            "✨ Желаем вам прекрасного отдыха!"
+        ).format(**params)
+    elif lang == "tr":
+        return (
+            "🏨 *{suite_name}'e Hoş Geldiniz!* 🌴\n\n"
+            "Değerli misafirimiz, sizi ağırlamaktan mutluluk duyuyoruz. Konaklama ve giriş bilgileriniz:\n\n"
+            "📅 *Tarihler:* {checkin} ➔ {checkout}\n"
+            "📍 *Adres:* Ege Mah. Isparta Sok. No: 6/1 Daire: 11, Dalaman / Muğla\n"
+            "🗺 *Google Maps:* {maps_url}\n\n"
+            "🕒 *Giriş Saati (Check-in):* {checkin_hour} itibarıyla\n"
+            "🚪 *Çıkış Saati (Check-out):* {checkout_hour}\n"
+            "📶 *Wi-Fi:* {wifi_name}\n"
+            "🔐 *Wi-Fi Şifresi:* {wifi_password}\n\n"
+            "🎁 *ÖZEL DOĞRUDAN REZERVASYONDA %10 İNDİRİM:*\n"
+            "Bu mesaja *\"EVET\"* veya *\"YES\"* yazarak yanıt verin, konaklama uzatmanızda veya web sitemiz (dalamanairportsuites.com) üzerinden yapacağınız sonraki rezervasyonda geçerli *%10 İNDİRİM (Kupon: DAS10)* kazanın!\n\n"
+            "🚗 *Konum:* Dalaman Havalimanı'na (DLM) sadece 10 dakika.\n"
+            "📞 WhatsApp İletişim: +90 542 367 45 99\n"
+            "🌐 Web Sitemiz: https://dalamanairportsuites.com\n\n"
+            "✨ Keyifli ve huzurlu bir konaklama dileriz!"
+        ).format(**params)
+    else: # en
+        return (
+            "🏨 *Welcome to {suite_name}!* 🌴\n\n"
+            "Dear Guest, we are delighted to host you. Here are your reservation & check-in details:\n\n"
+            "📅 *Dates:* {checkin} ➔ {checkout}\n"
+            "📍 *Address:* Ege Mah. Isparta Sok. No: 6/1 Apt: 11, Dalaman / Muğla\n"
+            "🗺 *Google Maps:* {maps_url}\n\n"
+            "🕒 *Check-in Time:* {checkin_hour} onwards\n"
+            "🚪 *Check-out Time:* {checkout_hour}\n"
+            "📶 *Wi-Fi:* {wifi_name}\n"
+            "🔐 *Wi-Fi Password:* {wifi_password}\n\n"
+            "🎁 *EXCLUSIVE GIFT / %10 DIRECT BOOKING DISCOUNT:*\n"
+            "Reply to this message with *\"YES\"* or *\"EVET\"* to activate your *%10 DIRECT DISCOUNT (Promo Code: DAS10)* for extra nights or your next booking via our website (dalamanairportsuites.com)!\n\n"
+            "🚗 *Location:* Only 10 mins from Dalaman International Airport (DLM).\n"
+            "📞 WhatsApp Direct: +90 542 367 45 99\n"
+            "🌐 Website: https://dalamanairportsuites.com\n\n"
+            "✨ We wish you a wonderful and relaxing stay!"
+        ).format(**params)
+
+def get_multilingual_extension(lang: str, params: dict) -> str:
+    if lang == "de":
+        return (
+            "Lieber Gast,\n\n"
+            "wir hoffen, Sie genießen Ihren Aufenthalt in der {suite_name}!\n\n"
+            "Aufgrund einer kurzfristigen Stornierung für morgen, {tomorrow_date}, ist unsere Suite unerwartet für eine zusätzliche Nacht frei geworden.\n\n"
+            "Falls Sie Ihren Urlaub ohne Stress verlängern möchten, bieten wir Ihnen gerne einen exklusiven Direktpreis von {extension_price} (in bar zahlbar) an.\n\n"
+            "Geben Sie uns einfach heute kurz per WhatsApp Bescheid!\n\n"
+            "Beste Grüße,\n{suite_name}"
+        ).format(**params)
+    elif lang == "ru":
+        return (
+            "Уважаемый гость,\n\n"
+            "Надеемся, вам нравится отдых в {suite_name}!\n\n"
+            "В связи с отменой бронирования на завтра, {tomorrow_date}, апартаменты неожиданно освободились еще на одну ночь.\n\n"
+            "Если вы хотите продлить свой отдых без спешки, мы с радостью предлагаем вам специальную прямую цену {extension_price} (оплата наличными).\n\n"
+            "Если вам интересно, просто напишите нам сегодня в WhatsApp!\n\n"
+            "С уважением,\n{suite_name}"
+        ).format(**params)
+    elif lang == "tr":
+        return (
+            "Değerli Misafirimiz,\n\n"
+            "Umarız {suite_name} tesisimizde harika vakit geçiriyorsunuzdur!\n\n"
+            "Yarın ({tomorrow_date}) için son dakika bir iptal yaşandı ve dairemiz beklenmedik şekilde bir gece için müsait oldu.\n\n"
+            "Eğer tatilinizi uzatmak ve acele etmeden dinlenmek isterseniz, size doğrudan {extension_price} özel nakit fiyat teklif etmekten memnuniyet duyarız.\n\n"
+            "Düşünürseniz bugün bize buradan yazmanız yeterlidir.\n\n"
+            "İyi günler dileriz,\n{suite_name}"
+        ).format(**params)
+    else: # en
+        return (
+            "Dear Guest,\n\n"
+            "I hope you are having a wonderful stay at {suite_name}!\n\n"
+            "We just had a last-minute cancellation for tomorrow, {tomorrow_date}, which unexpectedly opened up the calendar for an extra night.\n\n"
+            "If you'd like to extend your stay and relax a bit longer without the rush of checking out, we would be delighted to offer you a special direct rate of {extension_price} (payable in cash).\n\n"
+            "If interested, just reply to this chat today!\n\n"
+            "Best regards,\n{suite_name}"
+        ).format(**params)
+
+def get_multilingual_discount_confirmed(lang: str, params: dict) -> str:
+    if lang == "de":
+        return (
+            "🎉 *Herzlichen Glückwunsch!* 🌴\n\n"
+            "Ihr *%10 DIREKTRABATT* Promo-Code wurde aktiviert:\n"
+            "🏷 *PROMO-CODE: DAS10*\n\n"
+            "So lösen Sie Ihren %10-Rabatt ein:\n"
+            "✅ Besuchen Sie unsere Website: https://dalamanairportsuites.com\n"
+            "✅ Klicken Sie auf den WhatsApp-Button oder schreiben Sie uns direkt hier mit dem Code *DAS10*\n"
+            "✅ Sparen Sie 100% der Buchungsgebühren + erhalten Sie %10 Sofortrabatt!\n\n"
+            "Wir freuen uns darauf, Sie wiederzusehen!"
+        ).format(**params)
+    elif lang == "ru":
+        return (
+            "🎉 *Поздравляем!* 🌴\n\n"
+            "Ваш промокод на *%10 СКИДКУ* активирован:\n"
+            "🏷 *ПРОМОКОД: DAS10*\n\n"
+            "Как использовать скидку %10:\n"
+            "✅ Зайдите на наш сайт: https://dalamanairportsuites.com\n"
+            "✅ Нажмите кнопку WhatsApp или напишите нам прямо сюда с кодом *DAS10*\n"
+            "✅ Экономьте на комиссиях платформ + получайте скидку %10!\n\n"
+            "Прекрасного отдыха!"
+        ).format(**params)
+    elif lang == "tr":
+        return (
+            "🎉 *Tebrikler!* 🌴\n\n"
+            "*%10 DOĞRUDAN İNDİRİM* kuponunuz aktif edildi:\n"
+            "🏷 *İNDİRİM KODU: DAS10*\n\n"
+            "Nasıl kullanılır:\n"
+            "✅ Web sitemizi ziyaret edin: https://dalamanairportsuites.com\n"
+            "✅ Sitedeki WhatsApp butonuna tıklayın veya doğrudan buradan *DAS10* kodunu iletin\n"
+            "✅ Aracı komisyonu olmadan anında %10 net indirim kazanın!\n\n"
+            "Keyifli konaklamalar dileriz!"
+        ).format(**params)
+    else: # en
+        return (
+            "🎉 *Congratulations!* 🌴\n\n"
+            "Your *%10 DIRECT DISCOUNT* promo code has been activated:\n"
+            "🏷 *PROMO CODE: DAS10*\n\n"
+            "How to redeem your %10 discount:\n"
+            "✅ Visit our website: https://dalamanairportsuites.com\n"
+            "✅ Click the WhatsApp button or message us directly here with code *DAS10*\n"
+            "✅ Save 100% on platform booking fees + get %10 instant discount!\n\n"
+            "Wishing you a fantastic stay!"
+        ).format(**params)
+
+def send_to_guest_or_sandbox(guest_phone: str, message: str, guest_lang: str = "en", guest_country: str = "") -> dict:
+    cfg = get_settings()
+    sandbox_mode = cfg.get("sandbox_mode", "1") == "1"
+    test_phone = cfg.get("test_phone", "+905423674599")
+    
+    clean_target = normalize_phone_number(guest_phone)
+    local_url = "http://127.0.0.1:3000/send"
+    
+    lang_names = {"de": "🇩🇪 Almanca", "ru": "🇷🇺 Rusça", "tr": "🇹🇷 Türkçe", "en": "🇬🇧 İngilizce"}
+    lang_label = lang_names.get(guest_lang, guest_lang.upper())
+    
+    if sandbox_mode:
+        # GÜVENLİ TEST MODU: Gerçek misafire ASLA gitmez! Sadece test_phone'a gider!
+        sandbox_wrapper = (
+            f"🧪 *[GÜVENLİ TEST MODU]*\n"
+            f"👤 *Hedef Misafir:* {clean_target} ({lang_label})\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"{message}"
+        )
+        try:
+            r = requests.post(local_url, json={"phone": test_phone, "message": sandbox_wrapper}, timeout=15)
+            if r.status_code == 200:
+                add_log(f"Test mesajı yöneticinin telefonuna iletildi ({test_phone}) [Hedef: {clean_target} - {lang_label}]", "success")
+                return {"success": True, "sandbox": True, "target": test_phone}
+            else:
+                add_log(f"Test mesajı gönderilemedi: {r.text}", "error")
+                return {"success": False, "error": r.text}
+        except Exception as e:
+            add_log(f"Test mesajı bağlantı hatası: {str(e)}", "error")
+            return {"success": False, "error": str(e)}
+    else:
+        # CANLI MOD: Gerçek misafire gider
+        try:
+            r = requests.post(local_url, json={"phone": clean_target, "message": message}, timeout=15)
+            if r.status_code == 200:
+                add_log(f"WhatsApp mesajı misafire iletildi -> {clean_target} ({lang_label})", "success")
+                return {"success": True, "sandbox": False, "target": clean_target}
+            else:
+                add_log(f"Mesaj iletilemedi ({clean_target}): {r.text}", "error")
+                return {"success": False, "error": r.text}
+        except Exception as e:
+            add_log(f"Bağlantı hatası ({clean_target}): {str(e)}", "error")
+            return {"success": False, "error": str(e)}
+
 def parse_ical(content):
     events = []
     blocks = content.split("BEGIN:VEVENT")
@@ -349,37 +571,33 @@ def check_extension_offers():
         
     # 2. Yarin cikis yapacak, numarasi girilmis ve henuz uzatma teklif edilmemis misafirleri bul
     cur.execute("""
-        SELECT uid, checkin, checkout, guest_phone 
+        SELECT uid, checkin, checkout, guest_phone, booker_country, language 
         FROM reservations 
         WHERE checkout = ? AND guest_phone != '' AND notified_extension = 0
     """, (tomorrow_str,))
     candidates = cur.fetchall()
     
-    local_gateway_url = "http://127.0.0.1:3000/send"
     for r in candidates:
-        uid, c_in, c_out, phone = r
+        uid, c_in, c_out, phone, booker_country, guest_lang = r
         clean_phone = (phone or "").strip()
         if not clean_phone:
             continue
             
-        msg = (ext_tpl
-               .replace("{suite_name}", suite_name)
-               .replace("{tomorrow_date}", tomorrow_fmt)
-               .replace("{extension_price}", ext_price)
-               .replace("{checkin}", format_date_str(c_in))
-               .replace("{checkout}", format_date_str(c_out)))
-               
-        try:
-            r_post = requests.post(local_gateway_url, json={"phone": clean_phone, "message": msg}, timeout=15)
-            if r_post.status_code == 200:
-                cur.execute("UPDATE reservations SET notified_extension = 1 WHERE uid = ?", (uid,))
-                conn.commit()
-                add_log(f"Misafire 1 gece uzatma teklifi iletildi -> {clean_phone} ({tomorrow_fmt} - {ext_price})", "success")
-            else:
-                add_log(f"Uzatma teklifi iletilemedi ({clean_phone}): {r_post.text}", "error")
-        except Exception as e:
-            add_log(f"Uzatma teklifi baglanti hatasi ({clean_phone}): {str(e)}", "error")
-        time.sleep(1.5)
+        lang = guest_lang or detect_guest_language(clean_phone, booker_country)
+        params = {
+            "suite_name": suite_name,
+            "tomorrow_date": tomorrow_fmt,
+            "extension_price": ext_price,
+            "checkin": format_date_str(c_in),
+            "checkout": format_date_str(c_out)
+        }
+        msg = get_multilingual_extension(lang, params)
+        
+        res = send_to_guest_or_sandbox(clean_phone, msg, lang, booker_country)
+        if res.get("success"):
+            cur.execute("UPDATE reservations SET notified_extension = 1 WHERE uid = ?", (uid,))
+            conn.commit()
+        time.sleep(2)
         
     conn.close()
 
@@ -444,12 +662,12 @@ async def index(request: Request):
     cur.execute("SELECT uid, checkin, checkout, notified_checkin, guest_phone, notified_welcome FROM reservations WHERE checkin = ?", (today_str,))
     today_checkins = [{"uid": r[0], "checkin": format_date_str(r[1]), "checkout": format_date_str(r[2]), "notified": r[3], "guest_phone": r[4] or "", "notified_welcome": r[5]} for r in cur.fetchall()]
     
-    cur.execute("SELECT uid, checkin, checkout, created_at, notified_checkout, guest_phone, notified_welcome, notified_extension, has_discount, discount_code FROM reservations ORDER BY checkin DESC LIMIT 100")
+    cur.execute("SELECT uid, checkin, checkout, created_at, notified_checkout, guest_phone, notified_welcome, notified_extension, has_discount, discount_code, booker_country, language FROM reservations ORDER BY checkin DESC LIMIT 100")
     all_res = []
     current_hour = datetime.datetime.now().hour
     
     for r in cur.fetchall():
-        uid, c_in, c_out, created_at, notif_out, guest_phone, notif_welcome, notif_ext, has_discount, discount_code = r
+        uid, c_in, c_out, created_at, notif_out, guest_phone, notif_welcome, notif_ext, has_discount, discount_code, booker_country, guest_lang = r
         
         if today_str > c_out:
             status = "Çıkış Yaptı"
@@ -466,6 +684,8 @@ async def index(request: Request):
         else:
             status = "Gelecek"
             
+        calculated_lang = guest_lang or detect_guest_language(guest_phone or "", booker_country or "")
+            
         all_res.append({
             "uid": uid,
             "short_uid": uid[:15] + "...",
@@ -477,6 +697,8 @@ async def index(request: Request):
             "notified_extension": notif_ext,
             "has_discount": has_discount or 0,
             "discount_code": discount_code or "",
+            "booker_country": (booker_country or "").upper(),
+            "language": calculated_lang,
             "created_at": created_at
         })
         
@@ -542,13 +764,13 @@ async def save_settings(
 async def send_extension_offer(uid: str = Form(...)):
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
-    cur.execute("SELECT uid, checkin, checkout, guest_phone, suite_name FROM reservations WHERE uid = ?", (uid,))
+    cur.execute("SELECT uid, checkin, checkout, guest_phone, suite_name, booker_country, language FROM reservations WHERE uid = ?", (uid,))
     row = cur.fetchone()
     if not row:
         conn.close()
         return JSONResponse({"status": "error", "message": "Rezervasyon bulunamadı."})
         
-    uid_res, c_in, c_out, phone, r_suite = row
+    uid_res, c_in, c_out, phone, r_suite, booker_country, guest_lang = row
     clean_phone = (phone or "").strip()
     if not clean_phone:
         conn.close()
@@ -557,7 +779,6 @@ async def send_extension_offer(uid: str = Form(...)):
     cfg = get_settings()
     suite_name = cfg.get("suite_name", r_suite or "Dalaman Airport Suite 11")
     ext_price = cfg.get("extension_price", "€75")
-    ext_tpl = cfg.get("msg_extension", "")
     
     try:
         c_out_dt = datetime.datetime.strptime(c_out, "%Y%m%d")
@@ -565,28 +786,26 @@ async def send_extension_offer(uid: str = Form(...)):
     except Exception:
         tomorrow_fmt = format_date_str(c_out)
         
-    msg = (ext_tpl
-           .replace("{suite_name}", suite_name)
-           .replace("{tomorrow_date}", tomorrow_fmt)
-           .replace("{extension_price}", ext_price)
-           .replace("{checkin}", format_date_str(c_in))
-           .replace("{checkout}", format_date_str(c_out)))
-           
-    local_gateway_url = "http://127.0.0.1:3000/send"
-    try:
-        r_post = requests.post(local_gateway_url, json={"phone": clean_phone, "message": msg}, timeout=15)
-        if r_post.status_code == 200:
-            cur.execute("UPDATE reservations SET notified_extension = 1 WHERE uid = ?", (uid,))
-            conn.commit()
-            conn.close()
-            add_log(f"Misafire manuel uzatma teklifi iletildi -> {clean_phone} ({tomorrow_fmt} - {ext_price})", "success")
-            return JSONResponse({"status": "ok", "message": f"1 Gece uzatma teklifi ({clean_phone}) numarasına başarıyla iletildi!"})
-        else:
-            conn.close()
-            return JSONResponse({"status": "error", "message": f"Mesaj iletilemedi: {r_post.text}"})
-    except Exception as e:
+    lang = guest_lang or detect_guest_language(clean_phone, booker_country)
+    params = {
+        "suite_name": suite_name,
+        "tomorrow_date": tomorrow_fmt,
+        "extension_price": ext_price,
+        "checkin": format_date_str(c_in),
+        "checkout": format_date_str(c_out)
+    }
+    msg = get_multilingual_extension(lang, params)
+    
+    res = send_to_guest_or_sandbox(clean_phone, msg, lang, booker_country)
+    if res.get("success"):
+        cur.execute("UPDATE reservations SET notified_extension = 1 WHERE uid = ?", (uid,))
+        conn.commit()
         conn.close()
-        return JSONResponse({"status": "error", "message": f"Bağlantı hatası: {str(e)}"})
+        target_info = "🛡️ [GÜVENLİ TEST MODU] Test telefonuna iletildi" if res.get("sandbox") else f"Misafire iletildi ({clean_phone})"
+        return JSONResponse({"status": "ok", "message": f"1 Gece uzatma teklifi ({lang.upper()}) {target_info}!"})
+    else:
+        conn.close()
+        return JSONResponse({"status": "error", "message": f"Mesaj iletilemedi: {res.get('error', 'Bilinmeyen hata')}"})
 
 @app.post("/api/reservation/send-welcome")
 async def send_welcome_message(uid: str = Form(...), phone: str = Form(...)):
@@ -596,13 +815,13 @@ async def send_welcome_message(uid: str = Form(...), phone: str = Form(...)):
         
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
-    cur.execute("SELECT checkin, checkout, suite_name FROM reservations WHERE uid = ?", (uid,))
+    cur.execute("SELECT checkin, checkout, suite_name, booker_country, language FROM reservations WHERE uid = ?", (uid,))
     row = cur.fetchone()
     if not row:
         conn.close()
         return JSONResponse({"status": "error", "message": "Rezervasyon bulunamadı."})
         
-    c_in_raw, c_out_raw, r_suite = row
+    c_in_raw, c_out_raw, r_suite, booker_country, guest_lang = row
     c_in = format_date_str(c_in_raw)
     c_out = format_date_str(c_out_raw)
     
@@ -613,40 +832,31 @@ async def send_welcome_message(uid: str = Form(...), phone: str = Form(...)):
     checkin_hour = cfg.get("checkin_hour", "15:00")
     checkout_hour = cfg.get("checkout_hour", "11:00")
     maps_url = cfg.get("maps_url", "https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla")
-    welcome_tpl = cfg.get("msg_welcome", "")
     
-    msg = (welcome_tpl
-           .replace("{suite_name}", suite_name)
-           .replace("{checkin}", c_in)
-           .replace("{checkout}", c_out)
-           .replace("{wifi_name}", wifi_name)
-           .replace("{wifi_password}", wifi_password)
-           .replace("{checkin_hour}", checkin_hour)
-           .replace("{checkout_hour}", checkout_hour)
-           .replace("{maps_url}", maps_url))
-           
-    local_gateway_url = "http://127.0.0.1:3000/send"
-    try:
-        r = requests.post(local_gateway_url, json={"phone": phone, "message": msg}, timeout=15)
-        if r.status_code == 200:
-            cur.execute("UPDATE reservations SET guest_phone = ?, notified_welcome = 1 WHERE uid = ?", (phone, uid))
-            conn.commit()
-            conn.close()
-            add_log(f"Misafire karşılama mesajı iletildi -> {phone} ({c_in} - {c_out})", "success")
-            return JSONResponse({"status": "ok", "message": f"Karşılama mesajı misafire ({phone}) başarıyla iletildi!"})
-        else:
-            conn.close()
-            err_text = r.text
-            try:
-                err_text = r.json().get("error", err_text)
-            except Exception:
-                pass
-            add_log(f"Misafir karşılama hatası ({phone}): {err_text}", "error")
-            return JSONResponse({"status": "error", "message": f"Mesaj iletilemedi: {err_text}"})
-    except Exception as e:
+    lang = guest_lang or detect_guest_language(phone, booker_country)
+    params = {
+        "suite_name": suite_name,
+        "checkin": c_in,
+        "checkout": c_out,
+        "wifi_name": wifi_name,
+        "wifi_password": wifi_password,
+        "checkin_hour": checkin_hour,
+        "checkout_hour": checkout_hour,
+        "maps_url": maps_url
+    }
+    
+    msg = get_multilingual_welcome(lang, params)
+    
+    res = send_to_guest_or_sandbox(phone, msg, lang, booker_country)
+    if res.get("success"):
+        cur.execute("UPDATE reservations SET guest_phone = ?, language = ?, notified_welcome = 1 WHERE uid = ?", (phone, lang, uid))
+        conn.commit()
         conn.close()
-        add_log(f"Misafir karşılama bağlantı hatası ({phone}): {str(e)}", "error")
-        return JSONResponse({"status": "error", "message": f"Bağlantı hatası: {str(e)}"})
+        target_info = "🛡️ [GÜVENLİ TEST MODU] Test telefonuna iletildi" if res.get("sandbox") else f"Misafire iletildi ({phone})"
+        return JSONResponse({"status": "ok", "message": f"Karşılama mesajı ({lang.upper()}) {target_info}!"})
+    else:
+        conn.close()
+        return JSONResponse({"status": "error", "message": f"Mesaj iletilemedi: {res.get('error', 'Bilinmeyen hata')}"})
 
 @app.post("/api/reservation/save-phone")
 async def save_guest_phone(uid: str = Form(...), phone: str = Form(...)):
@@ -785,37 +995,30 @@ async def whatsapp_inbound_webhook(request: Request):
         add_log(f"Web sitesinden doğrudan rezervasyon talebi alındı (DAS10) -> +{clean_phone}", "success")
         
     elif is_affirmative:
+        guest_lang = "en"
         if res_row:
             uid, c_in, c_out, g_phone, has_disc = res_row
-            cur.execute("UPDATE reservations SET has_discount = 1, discount_code = 'DAS10' WHERE uid = ?", (uid,))
+            cur.execute("SELECT booker_country, language FROM reservations WHERE uid = ?", (uid,))
+            b_info = cur.fetchone()
+            if b_info:
+                b_country, b_lang = b_info
+                guest_lang = b_lang or detect_guest_language(clean_phone, b_country)
+            cur.execute("UPDATE reservations SET has_discount = 1, discount_code = 'DAS10', language = ? WHERE uid = ?", (guest_lang, uid))
             conn.commit()
+        else:
+            guest_lang = detect_guest_language(clean_phone, "")
             
-        # Misafire %10 indirim promosyon mesajını ilet
-        disc_msg = cfg.get("msg_discount_confirmed", (
-            "🎉 *Congratulations! / Tebrikler!* 🌴\n\n"
-            "Your *%10 DIRECT DISCOUNT* promo code has been activated:\n"
-            "🏷 *PROMO CODE: DAS10*\n\n"
-            "How to redeem your %10 discount:\n"
-            "✅ Visit our website: https://dalamanairportsuites.com\n"
-            "✅ Click the WhatsApp button or message us directly here with code *DAS10*\n"
-            "✅ Save 100% on platform booking fees + get %10 instant discount!\n\n"
-            "*(Web sitemizdeki WhatsApp butonuna tıklayarak veya doğrudan buradan bize 'DAS10' kodunu ileterek %10 indirimli, komisyonsuz doğrudan rezervasyonunuzu yapabilirsiniz.)*\n\n"
-            "Wishing you a fantastic stay!"
-        )).replace("{suite_name}", suite_name)
-        
-        try:
-            requests.post("http://127.0.0.1:3000/send", json={"phone": raw_phone, "message": disc_msg}, timeout=10)
-            add_log(f"Misafire %10 Web İndirim Onayı (DAS10) WhatsApp'tan iletildi -> +{clean_phone}", "success")
-        except Exception as e:
-            add_log(f"İndirim onay mesajı iletilemedi (+{clean_phone}): {str(e)}", "error")
+        params = {"suite_name": suite_name}
+        disc_msg = get_multilingual_discount_confirmed(guest_lang, params)
+        send_to_guest_or_sandbox(clean_phone, disc_msg, guest_lang, "")
             
         # Yöneticiye anında WhatsApp alarmı gönder
         host_alert = (
             f"🎁 *MİSAFİR 'EVET' DEDİ & %10 WEB İNDİRİMİ KAZANDI!*\n\n"
-            f"📱 *Misafir:* +{clean_phone}\n"
+            f"📱 *Misafir:* +{clean_phone} ({guest_lang.upper()})\n"
             f"💬 *Mesaj:* \"{text}\"\n"
             f"🏷 *Kupon:* DAS10 (%10 Web İndirimi Aktif)\n\n"
-            f"Misafir doğrudan iletişim ve %10 indirim onayını verdi. Web panelinde %10 indirim rozeti güncellendi."
+            f"Misafir doğrudan iletişim ve %10 indirim onayını verdi. Misafire kendi dilinde indirim kuponu iletildi."
         )
         send_whatsapp(host_alert)
         
@@ -867,6 +1070,7 @@ async def import_booking_csv(file: UploadFile = File(...)):
         checkout_val = (row.get("Check-out") or row.get("Checkout") or row.get("Çıkış") or row.get("Cikis") or "").strip()
         phone_val = (row.get("Phone number") or row.get("Phone") or row.get("Telefon") or row.get("Cep") or "").strip()
         duration_val = (row.get("Duration (nights)") or row.get("Nights") or row.get("Gece") or "1").strip()
+        country_val = (row.get("Booker country") or row.get("Country") or row.get("Ülke") or "").strip().lower()
         
         if not checkout_val or not phone_val:
             continue
@@ -875,6 +1079,7 @@ async def import_booking_csv(file: UploadFile = File(...)):
         if not norm_phone:
             continue
             
+        guest_lang = detect_guest_language(norm_phone, country_val)
         total_processed += 1
         
         c_out_date = None
@@ -901,14 +1106,14 @@ async def import_booking_csv(file: UploadFile = File(...)):
         found = cur.fetchone()
         
         if found:
-            cur.execute("UPDATE reservations SET guest_phone = ? WHERE uid = ?", (norm_phone, found[0]))
+            cur.execute("UPDATE reservations SET guest_phone = ?, booker_country = ?, language = ? WHERE uid = ?", (norm_phone, country_val, guest_lang, found[0]))
             matched_count += 1
         else:
             new_uid = f"booking-csv-{c_in_str}-{c_out_str}-{norm_phone[-6:]}"
             cur.execute("""
-                INSERT OR IGNORE INTO reservations (uid, checkin, checkout, suite_name, notified_new, guest_phone, created_at)
-                VALUES (?, ?, ?, ?, 1, ?, ?)
-            """, (new_uid, c_in_str, c_out_str, suite_name, norm_phone, now_str))
+                INSERT OR IGNORE INTO reservations (uid, checkin, checkout, suite_name, notified_new, guest_phone, created_at, booker_country, language)
+                VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?)
+            """, (new_uid, c_in_str, c_out_str, suite_name, norm_phone, now_str, country_val, guest_lang))
             created_count += 1
             
     conn.commit()
@@ -920,7 +1125,7 @@ async def import_booking_csv(file: UploadFile = File(...)):
         "matched": matched_count,
         "created": created_count,
         "total": total_processed,
-        "message": f"İşlem Tamamlandı: {matched_count} rezervasyonun telefonu güncellendi, {created_count} yeni misafir rehbere eklendi (Toplam {total_processed})."
+        "message": f"İşlem Tamamlandı: {matched_count} rezervasyonun telefonu ve dili güncellendi, {created_count} yeni misafir rehbere eklendi (Toplam {total_processed})."
     })
 
 # -------------------------------------------------------------
@@ -1007,6 +1212,10 @@ async def send_campaign(
     if not message:
         return JSONResponse({"status": "error", "message": "Kampanya mesajı boş olamaz."})
         
+    cfg = get_settings()
+    sandbox_mode = cfg.get("sandbox_mode", "1") == "1"
+    test_phone = cfg.get("test_phone", "+905423674599")
+    
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     
@@ -1025,10 +1234,34 @@ async def send_campaign(
     if not recipients:
         return JSONResponse({"status": "error", "message": "Seçilen filtreye uygun kayıtlı misafir telefon numarası bulunamadı."})
         
+    if sandbox_mode:
+        # GÜVENLİ TEST MODU: Gerçek misafirlere ASLA gitmez! Sadece test_phone'a önizleme gider!
+        test_wrapper = (
+            f"🧪 *[GÜVENLİ TEST MODU - KAMPANYA ÖNİZLEMESİ]*\n"
+            f"👥 *Hedef Kitle:* {len(recipients)} misafir seçildi\n"
+            f"📱 *İletilen Test Telefonu:* {test_phone}\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"{message}"
+        )
+        local_url = "http://127.0.0.1:3000/send"
+        try:
+            r = requests.post(local_url, json={"phone": test_phone, "message": test_wrapper}, timeout=15)
+            if r.status_code == 200:
+                add_log(f"Kampanya test önizlemesi yöneticinin telefonuna iletildi ({test_phone}) [{len(recipients)} misafir hedefli]", "success")
+                return JSONResponse({
+                    "status": "ok",
+                    "message": f"🛡️ GÜVENLİ TEST MODU DEVREDE: Gerçek misafirler rahatsız edilmedi! Kampanyanın birebir önizlemesi telefonunuza ({test_phone}) iletildi. Gerçek gönderim için üst bardan 'Canlı Mod'a geçebilirsiniz."
+                })
+            else:
+                return JSONResponse({"status": "error", "message": f"WhatsApp hatası: {r.text}"})
+        except Exception as e:
+            return JSONResponse({"status": "error", "message": f"Bağlantı hatası: {str(e)}"})
+            
+    # CANLI MOD: Gerçek alıcılara gider
     def run_campaign(phone_list, text_body):
         success = 0
         local_url = "http://127.0.0.1:3000/send"
-        add_log(f"Mevsimsel kampanya gönderimi başlatıldı ({len(phone_list)} alıcı, 10sn aralıklarla)...", "info")
+        add_log(f"CANLI Mevsimsel kampanya gönderimi başlatıldı ({len(phone_list)} alıcı, 10sn aralıklarla)...", "info")
         for p in phone_list:
             try:
                 r = requests.post(local_url, json={"phone": p, "message": text_body}, timeout=15)
@@ -1049,6 +1282,92 @@ async def send_campaign(
         "status": "ok", 
         "message": f"Kampanya {len(recipients)} kişiye 10 saniyelik güvenli bekleme aralıklarıyla gönderilmek üzere arka planda başlatıldı! İlerlemeyi Sistem Olay Günlüğü'nden anlık izleyebilirsiniz."
     })
+
+# -------------------------------------------------------------
+# GÜVENLİ SANDBOX (TEST MODU) & ÇOK DİLLİ TEST LABORATUVARI
+# -------------------------------------------------------------
+@app.post("/api/sandbox/toggle")
+async def toggle_sandbox():
+    cfg = get_settings()
+    curr = cfg.get("sandbox_mode", "1")
+    new_val = "0" if curr == "1" else "1"
+    update_setting("sandbox_mode", new_val)
+    mode_name = "🛡️ GÜVENLİ TEST MODU (AÇIK - Tüm mesajlar +905423674599 numarasına gider)" if new_val == "1" else "🔴 CANLI GÖNDERİM MODU (DİKKAT - Gerçek misafirlere gider!)"
+    add_log(f"Sistem Modu Değiştirildi: {mode_name}", "warning" if new_val == "0" else "info")
+    return JSONResponse({"status": "ok", "sandbox_mode": new_val, "message": mode_name})
+
+@app.get("/api/sandbox/status")
+async def get_sandbox_status():
+    cfg = get_settings()
+    return JSONResponse({
+        "sandbox_mode": cfg.get("sandbox_mode", "1"),
+        "test_phone": cfg.get("test_phone", "+905423674599")
+    })
+
+@app.post("/api/sandbox/test-sample")
+async def test_sandbox_sample(msg_type: str = Form(...), lang: str = Form("de")):
+    cfg = get_settings()
+    suite_name = cfg.get("suite_name", "Dalaman Airport Suite 11")
+    wifi_name = cfg.get("wifi_name", "VODAFONE_9P1076")
+    wifi_password = cfg.get("wifi_password", "y4b44CckUkHECRcd")
+    checkin_hour = cfg.get("checkin_hour", "15:00")
+    checkout_hour = cfg.get("checkout_hour", "11:00")
+    maps_url = cfg.get("maps_url", "https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla")
+    ext_price = cfg.get("extension_price", "€75")
+    test_phone = cfg.get("test_phone", "+905423674599")
+    
+    today = datetime.date.today()
+    tomorrow = today + datetime.timedelta(days=1)
+    
+    params = {
+        "suite_name": suite_name,
+        "checkin": today.strftime("%d.%m.%Y"),
+        "checkout": tomorrow.strftime("%d.%m.%Y"),
+        "tomorrow_date": tomorrow.strftime("%d.%m.%Y"),
+        "wifi_name": wifi_name,
+        "wifi_password": wifi_password,
+        "checkin_hour": checkin_hour,
+        "checkout_hour": checkout_hour,
+        "maps_url": maps_url,
+        "extension_price": ext_price
+    }
+    
+    lang_names = {"de": "🇩🇪 Almanca", "ru": "🇷🇺 Rusça", "tr": "🇹🇷 Türkçe", "en": "🇬🇧 İngilizce"}
+    lang_label = lang_names.get(lang, lang.upper())
+    
+    if msg_type == "welcome":
+        content = get_multilingual_welcome(lang, params)
+        title = f"Karşılama & Wi-Fi ({lang_label})"
+    elif msg_type == "extension":
+        content = get_multilingual_extension(lang, params)
+        title = f"1 Gece Uzatma {ext_price} ({lang_label})"
+    elif msg_type == "discount":
+        content = get_multilingual_discount_confirmed(lang, params)
+        title = f"%10 Web İndirim Kuponu DAS10 ({lang_label})"
+    else:
+        content = CAMPAIGN_PRESETS[0]["template"].replace("{suite_name}", suite_name)
+        title = f"Mevsimsel Kampanya Önizlemesi ({lang_label})"
+        
+    sample_phone = "+4916091280550" if lang == "de" else ("+79123456789" if lang == "ru" else ("+905423674599" if lang == "tr" else "+447911123456"))
+    
+    test_wrapper = (
+        f"🧪 *[LABORATUVAR TESTİ / {title}]*\n"
+        f"👤 *Hedef Misafir Örneği:* {sample_phone} ({lang_label})\n"
+        f"📱 *İletilen Test Telefonu:* {test_phone}\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n\n"
+        f"{content}"
+    )
+    
+    local_url = "http://127.0.0.1:3000/send"
+    try:
+        r = requests.post(local_url, json={"phone": test_phone, "message": test_wrapper}, timeout=15)
+        if r.status_code == 200:
+            add_log(f"Laboratuvar testi başarıyla iletildi -> {test_phone} ({title})", "success")
+            return JSONResponse({"status": "ok", "message": f"{title} testi telefonunuza ({test_phone}) başarıyla gönderildi!"})
+        else:
+            return JSONResponse({"status": "error", "message": f"WhatsApp hatası: {r.text}"})
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": f"Bağlantı hatası: {str(e)}"})
 
 if __name__ == "__main__":
     import uvicorn

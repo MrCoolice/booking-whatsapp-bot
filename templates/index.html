@@ -31,6 +31,14 @@
                     <i class="fa-regular fa-calendar"></i> {{ today_display }}
                 </span>
                 
+                <!-- Güvenli Sandbox Test Modu Butonu -->
+                <button onclick="toggleSandbox()" id="sandboxToggleBtn" 
+                        class="{% if config.sandbox_mode == '1' %}bg-emerald-950/80 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-500/50{% else %}bg-rose-950/80 hover:bg-rose-900/80 text-rose-300 border border-rose-500/50{% endif %} px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+                        title="Açıkken mesajlar gerçek misafire gitmez, sadece test telefonuna (+905423674599) iletilir.">
+                    <span id="sandboxDot" class="w-2.5 h-2.5 rounded-full {% if config.sandbox_mode == '1' %}bg-emerald-400 animate-pulse{% else %}bg-rose-500{% endif %}"></span>
+                    <span id="sandboxText">{% if config.sandbox_mode == '1' %}🛡️ Test Modu: AÇIK{% else %}🔴 CANLI MOD{% endif %}</span>
+                </button>
+
                 <!-- Yerel WhatsApp Durum Butonu -->
                 <button onclick="openWhatsAppModal()" id="waBadge" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border border-slate-700 shadow-sm cursor-pointer">
                     <span id="waDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
@@ -41,7 +49,7 @@
                     <i class="fa-solid fa-arrows-rotate"></i> Şimdi Eşle
                 </button>
                 <button onclick="resendLatestAlert()" class="bg-violet-600 hover:bg-violet-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm" title="Son rezervasyon bildirimini WhatsApp'a tekrar iletir">
-                    <i class="fa-solid fa-bell"></i> Rezervasyon Bildirimi Testi
+                    <i class="fa-solid fa-bell"></i> Bildirim Testi
                 </button>
                 <button onclick="testWhatsApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm">
                     <i class="fa-brands fa-whatsapp"></i> Test Gönder
@@ -269,10 +277,19 @@
                                         {% endif %}
                                     </td>
                                     <td class="py-2.5 px-2">
-                                        <div class="flex items-center gap-1.5">
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            {% if r.language == 'de' %}
+                                                <span class="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap" title="Almanca (Almanya/Avusturya/İsviçre)">🇩🇪 DE{% if r.booker_country %} ({{ r.booker_country }}){% endif %}</span>
+                                            {% elif r.language == 'ru' %}
+                                                <span class="bg-indigo-100 text-indigo-900 border border-indigo-300 text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap" title="Rusça (Rusya/Kazakistan/Ukrayna)">🇷🇺 RU{% if r.booker_country %} ({{ r.booker_country }}){% endif %}</span>
+                                            {% elif r.language == 'tr' %}
+                                                <span class="bg-rose-100 text-rose-900 border border-rose-300 text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap" title="Türkçe / Azerice">🇹🇷 TR{% if r.booker_country %} ({{ r.booker_country }}){% endif %}</span>
+                                            {% else %}
+                                                <span class="bg-blue-100 text-blue-900 border border-blue-300 text-[10px] px-1.5 py-0.5 rounded font-bold whitespace-nowrap" title="İngilizce (Uluslararası)">🇬🇧 EN{% if r.booker_country %} ({{ r.booker_country }}){% endif %}</span>
+                                            {% endif %}
                                             <input type="text" id="phone_res_{{ loop.index }}" value="{{ r.guest_phone }}" placeholder="+905..." 
                                                    class="w-28 sm:w-32 px-2 py-1 text-xs border border-slate-300 rounded-lg outline-none focus:ring-1 focus:ring-emerald-500 font-mono bg-white">
-                                            <button onclick="sendWelcome('{{ r.uid }}', 'phone_res_{{ loop.index }}')" title="Karşılama / Wi-Fi Mesajı Gönder"
+                                            <button onclick="sendWelcome('{{ r.uid }}', 'phone_res_{{ loop.index }}')" title="Karşılama / Wi-Fi Mesajı Gönder (Otomatik Kendi Dilinde)"
                                                     class="{% if r.notified_welcome %}bg-slate-800 hover:bg-slate-700 text-slate-300{% else %}bg-emerald-600 hover:bg-emerald-500 text-white{% endif %} text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1 transition shadow-xs whitespace-nowrap cursor-pointer">
                                                 <i class="fa-brands fa-whatsapp text-emerald-400"></i> {% if r.notified_welcome %}İletildi ✓{% else %}Karşıla{% endif %}
                                             </button>
@@ -280,7 +297,7 @@
                                                     class="bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 text-[11px] px-2 py-1 rounded-lg font-medium flex items-center gap-1 transition shadow-xs whitespace-nowrap cursor-pointer">
                                                 <i class="fa-solid fa-bell text-violet-500"></i> Bildir
                                             </button>
-                                            <button onclick="sendExtension('{{ r.uid }}')" title="Misafire 1 Gece İndirimli Uzatma Teklifi Gönder"
+                                            <button onclick="sendExtension('{{ r.uid }}')" title="Misafire 1 Gece İndirimli Uzatma Teklifi Gönder (Otomatik Kendi Dilinde)"
                                                     class="{% if r.notified_extension %}bg-slate-800 hover:bg-slate-700 text-slate-300{% else %}bg-amber-500 hover:bg-amber-600 text-white{% endif %} text-[11px] px-2 py-1 rounded-lg font-medium flex items-center gap-1 transition shadow-xs whitespace-nowrap cursor-pointer">
                                                 <i class="fa-solid fa-gift text-amber-200"></i> {% if r.notified_extension %}Uzatıldı ✓{% else %}Uzat{% endif %}
                                             </button>
@@ -291,6 +308,100 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Çok Dilli Test Laboratuvarı (Safe Multilingual Sandbox Testing) -->
+                <div class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-6 border border-indigo-500/30 shadow-xl space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-indigo-900/60 pb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-indigo-500/20 text-indigo-400 p-2.5 rounded-xl border border-indigo-500/30">
+                                <i class="fa-solid fa-flask-vial text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                    🧪 Çok Dilli Test Laboratuvarı <span class="text-[10px] bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-semibold">🛡️ %100 Güvenli Sandbox</span>
+                                </h3>
+                                <p class="text-xs text-indigo-200/70">Misafirleri rahatsız etmeden tüm dillerdeki şablonları anında yöneticinin telefonuna test gönderin</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="bg-slate-800/90 border border-slate-700 text-emerald-400 px-3 py-1.5 rounded-lg text-xs font-mono font-medium flex items-center gap-1.5">
+                                <i class="fa-solid fa-mobile-screen"></i> Hedef Test No: <b>{{ config.test_phone }}</b>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- 1. Satır: 4 Dilde Karşılama & %10 Kupon Test Butonları -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+                        <!-- 🇩🇪 Almanca Karşılama -->
+                        <div class="bg-slate-800/60 border border-slate-700/80 rounded-xl p-3 flex flex-col justify-between space-y-2.5">
+                            <div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-white flex items-center gap-1.5">🇩🇪 Almanca (DE)</span>
+                                    <span class="text-[10px] bg-amber-400/20 text-amber-300 px-1.5 py-0.5 rounded font-mono">de/at/ch</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-1">Wi-Fi, Google Maps + %10 DAS10 Kuponu</p>
+                            </div>
+                            <button onclick="testSandboxSample('welcome', 'de')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-1.5 px-2.5 rounded-lg text-xs flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer">
+                                <i class="fa-brands fa-whatsapp text-emerald-400"></i> Almanca Karşıla
+                            </button>
+                        </div>
+
+                        <!-- 🇬🇧 İngilizce Karşılama -->
+                        <div class="bg-slate-800/60 border border-slate-700/80 rounded-xl p-3 flex flex-col justify-between space-y-2.5">
+                            <div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-white flex items-center gap-1.5">🇬🇧 İngilizce (EN)</span>
+                                    <span class="text-[10px] bg-blue-400/20 text-blue-300 px-1.5 py-0.5 rounded font-mono">gb/nl/int</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-1">Wi-Fi, Google Maps + %10 DAS10 Kuponu</p>
+                            </div>
+                            <button onclick="testSandboxSample('welcome', 'en')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-1.5 px-2.5 rounded-lg text-xs flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer">
+                                <i class="fa-brands fa-whatsapp text-emerald-400"></i> İngilizce Karşıla
+                            </button>
+                        </div>
+
+                        <!-- 🇷🇺 Rusça Karşılama -->
+                        <div class="bg-slate-800/60 border border-slate-700/80 rounded-xl p-3 flex flex-col justify-between space-y-2.5">
+                            <div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-white flex items-center gap-1.5">🇷🇺 Rusça (RU)</span>
+                                    <span class="text-[10px] bg-rose-400/20 text-rose-300 px-1.5 py-0.5 rounded font-mono">ru/kz/ua</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-1">Wi-Fi, Google Maps + %10 DAS10 Kuponu</p>
+                            </div>
+                            <button onclick="testSandboxSample('welcome', 'ru')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-1.5 px-2.5 rounded-lg text-xs flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer">
+                                <i class="fa-brands fa-whatsapp text-emerald-400"></i> Rusça Karşıla
+                            </button>
+                        </div>
+
+                        <!-- 🇹🇷 Türkçe Karşılama -->
+                        <div class="bg-slate-800/60 border border-slate-700/80 rounded-xl p-3 flex flex-col justify-between space-y-2.5">
+                            <div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-white flex items-center gap-1.5">🇹🇷 Türkçe (TR)</span>
+                                    <span class="text-[10px] bg-emerald-400/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono">tr/az</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-1">Wi-Fi, Google Maps + %10 DAS10 Kuponu</p>
+                            </div>
+                            <button onclick="testSandboxSample('welcome', 'tr')" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-1.5 px-2.5 rounded-lg text-xs flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer">
+                                <i class="fa-brands fa-whatsapp text-emerald-400"></i> Türkçe Karşıla
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. Satır: Hızlı Uzatma ve İndirim Onayı Testleri -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-800/80">
+                        <button onclick="testSandboxSample('extension', 'de')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+                            <span>🇩🇪 Almanca 1 Gece Uzatma (€75)</span>
+                        </button>
+                        <button onclick="testSandboxSample('extension', 'ru')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+                            <span>🇷🇺 Rusça 1 Gece Uzatma (€75)</span>
+                        </button>
+                        <button onclick="testSandboxSample('discount', 'de')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-300 py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+                            <i class="fa-solid fa-gift text-emerald-400"></i> %10 DAS10 Onay Mesajı
+                        </button>
                     </div>
                 </div>
 
@@ -867,6 +978,47 @@
             input.select();
             navigator.clipboard.writeText(input.value);
             showAlert('WhatsApp buton takip linki kopyalandı! WordPress sitenizdeki butona yapıştırabilirsiniz.', true);
+        }
+
+        // Sandbox & Çok Dilli Test Laboratuvarı Fonksiyonları
+        async function toggleSandbox() {
+            try {
+                const res = await fetch('/api/sandbox/toggle', { method: 'POST' });
+                const json = await res.json();
+                showAlert(json.message, true);
+                const btn = document.getElementById('sandboxToggleBtn');
+                const dot = document.getElementById('sandboxDot');
+                const text = document.getElementById('sandboxText');
+                
+                if (json.sandbox_mode === '1') {
+                    btn.className = 'bg-emerald-950/80 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-500/50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer';
+                    dot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
+                    text.innerText = '🛡️ Test Modu: AÇIK';
+                } else {
+                    btn.className = 'bg-rose-950/80 hover:bg-rose-900/80 text-rose-300 border border-rose-500/50 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer';
+                    dot.className = 'w-2.5 h-2.5 rounded-full bg-rose-500';
+                    text.innerText = '🔴 CANLI MOD';
+                }
+            } catch (err) {
+                showAlert('Mod değiştirilemedi: ' + err, false);
+            }
+        }
+
+        async function testSandboxSample(msgType, lang) {
+            const formData = new FormData();
+            formData.append('msg_type', msgType);
+            formData.append('lang', lang);
+            
+            try {
+                const res = await fetch('/api/sandbox/test-sample', {
+                    method: 'POST',
+                    body: formData
+                });
+                const json = await res.json();
+                showAlert(json.message, json.status === 'ok');
+            } catch (err) {
+                showAlert('Test gönderilemedi: ' + err, false);
+            }
         }
 
         checkWaStatus();
