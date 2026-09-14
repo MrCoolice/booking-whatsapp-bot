@@ -20,6 +20,7 @@ let qrCodeData = null;
 let qrCodeImage = null;
 let connectionStatus = 'disconnected'; // 'disconnected', 'connecting', 'qr_ready', 'connected'
 let connectedUser = null;
+const sentMessages = new Map();
 
 async function startSock() {
     connectionStatus = 'connecting';
@@ -31,7 +32,15 @@ async function startSock() {
         logger: pino({ level: 'silent' }),
         printQRInTerminal: true,
         auth: state,
-        browser: ['DalamanSuiteBot', 'Chrome', '120.0.0.0']
+        browser: ['DalamanSuiteBot', 'Chrome', '120.0.0.0'],
+        syncFullHistory: false,
+        markOnlineOnConnect: true,
+        getMessage: async (key) => {
+            if (sentMessages.has(key.id)) {
+                return sentMessages.get(key.id);
+            }
+            return undefined;
+        }
     });
 
     sock.ev.on('creds.update', saveCreds);
@@ -159,6 +168,13 @@ app.post('/send', async (req, res) => {
         }
 
         const sent = await sock.sendMessage(jid, { text: message });
+        if (sent && sent.key && sent.key.id && sent.message) {
+            sentMessages.set(sent.key.id, sent.message);
+            if (sentMessages.size > 500) {
+                const firstKey = sentMessages.keys().next().value;
+                sentMessages.delete(firstKey);
+            }
+        }
         return res.json({
             success: true,
             messageId: sent.key.id,
