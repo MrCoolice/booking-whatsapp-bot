@@ -71,6 +71,8 @@ def init_db():
         "ical_url": os.getenv("ICAL_URL", ""),
         "phone_numbers": os.getenv("PHONE_NUMBERS", ""),
         "morning_time": "09:00",
+        "welcome_auto_send": "1", # 1: Saat 15:00'te misafire otomatik karşılama gönder, 0: Kapalı
+        "welcome_auto_time": "15:00",
         "suite_name": "Dalaman Airport Suite 11",
         "wifi_name": "VODAFONE_9P1076",
         "wifi_password": "y4b44CckUkHECRcd",
@@ -601,6 +603,66 @@ def check_extension_offers():
         
     conn.close()
 
+def check_automatic_welcomes():
+    cfg = get_settings()
+    if cfg.get("welcome_auto_send", "1") != "1":
+        return
+        
+    today_str = datetime.datetime.now().strftime("%Y%m%d")
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    
+    # Bugün giriş yapacak, telefonu kayıtlı ve henüz karşılama gitmemiş misafirleri bul
+    cur.execute("""
+        SELECT uid, checkin, checkout, guest_phone, suite_name, booker_country, language 
+        FROM reservations 
+        WHERE checkin = ? AND guest_phone != '' AND guest_phone IS NOT NULL AND notified_welcome = 0
+    """, (today_str,))
+    candidates = cur.fetchall()
+    
+    if not candidates:
+        conn.close()
+        return
+        
+    suite_name = cfg.get("suite_name", "Dalaman Airport Suite 11")
+    wifi_name = cfg.get("wifi_name", "VODAFONE_9P1076")
+    wifi_password = cfg.get("wifi_password", "y4b44CckUkHECRcd")
+    checkin_hour = cfg.get("checkin_hour", "15:00")
+    checkout_hour = cfg.get("checkout_hour", "11:00")
+    maps_url = cfg.get("maps_url", "https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla")
+    
+    for r in candidates:
+        uid, c_in_raw, c_out_raw, phone, r_suite, booker_country, guest_lang = r
+        clean_phone = (phone or "").strip()
+        if not clean_phone:
+            continue
+            
+        c_in = format_date_str(c_in_raw)
+        c_out = format_date_str(c_out_raw)
+        lang = guest_lang or detect_guest_language(clean_phone, booker_country)
+        
+        params = {
+            "suite_name": suite_name,
+            "checkin": c_in,
+            "checkout": c_out,
+            "wifi_name": wifi_name,
+            "wifi_password": wifi_password,
+            "checkin_hour": checkin_hour,
+            "checkout_hour": checkout_hour,
+            "maps_url": maps_url
+        }
+        
+        msg = get_multilingual_welcome(lang, params)
+        res = send_to_guest_or_sandbox(clean_phone, msg, lang, booker_country)
+        
+        if res.get("success"):
+            cur.execute("UPDATE reservations SET language = ?, notified_welcome = 1 WHERE uid = ?", (lang, uid))
+            conn.commit()
+            add_log(f"Saat 15:00 Otomatik Karşılama İletildi ({lang.upper()}) -> {clean_phone}", "success")
+        time.sleep(2)
+        
+    conn.close()
+
 scheduler = BackgroundScheduler()
 
 def scheduled_job():
@@ -623,6 +685,18 @@ def scheduled_job():
         if current_hm >= morning_time:
             check_daily_reminders()
             
+    # Saat 15:00: Bugun giris yapacak misafirlere kendi dilinde karsilama gonder
+    try:
+        w_time = cfg.get("welcome_auto_time", "15:00")
+        w_parts = w_time.split(":")
+        w_hour = int(w_parts[0])
+        w_minute = int(w_parts[1]) if len(w_parts) > 1 else 0
+        welcome_dt = now.replace(hour=w_hour, minute=w_minute, second=0, microsecond=0)
+        if now >= welcome_dt:
+            check_automatic_welcomes()
+    except Exception:
+        pass
+
     # Aksam uzatma teklifi kontrolu (varsayilan 20:00)
     try:
         ext_time = cfg.get("extension_time", "20:00")
@@ -731,6 +805,8 @@ async def save_settings(
     extension_enabled: str = Form("1"),
     extension_time: str = Form("20:00"),
     extension_price: str = Form("€75"),
+    welcome_auto_send: str = Form("1"),
+    welcome_auto_time: str = Form("15:00"),
     msg_new_booking: str = Form(...),
     msg_checkin: str = Form(...),
     msg_checkout: str = Form(...),
@@ -750,6 +826,8 @@ async def save_settings(
     update_setting("extension_enabled", extension_enabled.strip())
     update_setting("extension_time", extension_time.strip())
     update_setting("extension_price", extension_price.strip())
+    update_setting("welcome_auto_send", welcome_auto_send.strip())
+    update_setting("welcome_auto_time", welcome_auto_time.strip())
     update_setting("msg_new_booking", msg_new_booking.strip())
     update_setting("msg_checkin", msg_checkin.strip())
     update_setting("msg_checkout", msg_checkout.strip())
