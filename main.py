@@ -108,7 +108,7 @@ def init_db():
             "*(Bu mesaja \"EVET\" veya \"YES\" yazarak yanıt verin, web sitemiz veya WhatsApp üzerinden yapacağınız bir sonraki rezervasyonunuzda geçerli %10 DOĞRUDAN İNDİRİM kuponunuzu anında alın!)*\n\n"
             "🚗 *Location:* Only 10 mins from Dalaman International Airport (DLM).\n"
             "📞 WhatsApp Direct: +90 542 367 45 99\n"
-            "🌐 Website: https://dalamanairportsuites.com\n\n"
+            "🌐 Website: https://dalamanairportsuites.com/\n\n"
             "✨ *We wish you a wonderful and relaxing stay!*\n*(Keyifli bir konaklama dileriz!)*"
         ),
         "msg_discount_confirmed": (
@@ -250,10 +250,10 @@ def get_multilingual_welcome(lang: str, params: dict) -> str:
             "📶 *WLAN (Wi-Fi):* {wifi_name}\n"
             "🔐 *WLAN-Passwort:* {wifi_password}\n\n"
             "🎁 *EXKLUSIVES GESCHENK / %10 DIREKTRABATT:*\n"
-            "Antworten Sie einfach auf diese Nachricht mit *\"JA\"* oder *\"YES\"*, um einen *%10 DIREKTRABATT (Gutscheincode: DAS10)* für Verlängerungsnächte oder Ihre nächste Buchung über unsere Website (dalamanairportsuites.com) zu aktivieren!\n\n"
+            "Antworten Sie einfach auf diese Nachricht mit *\"JA\"* oder *\"YES\"*, um einen *%10 DIREKTRABATT (Gutscheincode: DAS10)* für Verlängerungsnächte oder Ihre nächste Buchung über unsere Website (https://dalamanairportsuites.com/) zu aktivieren!\n\n"
             "🚗 *Lage:* Nur 10 Minuten vom Flughafen Dalaman (DLM) entfernt.\n"
             "📞 WhatsApp Direkt: +90 542 367 45 99\n"
-            "🌐 Website: https://dalamanairportsuites.com\n\n"
+            "🌐 Website: https://dalamanairportsuites.com/\n\n"
             "✨ Wir wünschen Ihnen einen erholsamen Aufenthalt!"
         ).format(**params)
     elif lang == "ru":
@@ -268,10 +268,10 @@ def get_multilingual_welcome(lang: str, params: dict) -> str:
             "📶 *Wi-Fi:* {wifi_name}\n"
             "🔐 *Пароль от Wi-Fi:* {wifi_password}\n\n"
             "🎁 *СПЕЦИАЛЬНЫЙ ПОДАРОК / СКИДКА %10:*\n"
-            "Ответьте на это сообщение *\"ДА\"* или *\"YES\"*, чтобы активировать *%10 СКИДКУ НА ПРЯМОЕ БРОНИРОВАНИЕ (Промокод: DAS10)* для продления проживания или следующего отдыха через наш сайт (dalamanairportsuites.com)!\n\n"
+            "Ответьте на это сообщение *\"ДА\"* или *\"YES\"*, чтобы активировать *%10 СКИДКУ НА ПРЯМОЕ БРОНИРОВАНИЕ (Промокод: DAS10)* для продления проживания или следующего отдыха через наш сайт (https://dalamanairportsuites.com/)!\n\n"
             "🚗 *Расположение:* Всего 10 минут от аэропорта Даламан (DLM).\n"
             "📞 WhatsApp: +90 542 367 45 99\n"
-            "🌐 Сайт: https://dalamanairportsuites.com\n\n"
+            "🌐 Сайт: https://dalamanairportsuites.com/\n\n"
             "✨ Желаем вам прекрасного отдыха!"
         ).format(**params)
     elif lang == "tr":
@@ -286,10 +286,10 @@ def get_multilingual_welcome(lang: str, params: dict) -> str:
             "📶 *Wi-Fi:* {wifi_name}\n"
             "🔐 *Wi-Fi Şifresi:* {wifi_password}\n\n"
             "🎁 *ÖZEL DOĞRUDAN REZERVASYONDA %10 İNDİRİM:*\n"
-            "Bu mesaja *\"EVET\"* veya *\"YES\"* yazarak yanıt verin, konaklama uzatmanızda veya web sitemiz (dalamanairportsuites.com) üzerinden yapacağınız sonraki rezervasyonda geçerli *%10 İNDİRİM (Kupon: DAS10)* kazanın!\n\n"
+            "Bu mesaja *\"EVET\"* veya *\"YES\"* yazarak yanıt verin, konaklama uzatmanızda veya web sitemiz (https://dalamanairportsuites.com/) üzerinden yapacağınız sonraki rezervasyonda geçerli *%10 İNDİRİM (Kupon: DAS10)* kazanın!\n\n"
             "🚗 *Konum:* Dalaman Havalimanı'na (DLM) sadece 10 dakika.\n"
             "📞 WhatsApp İletişim: +90 542 367 45 99\n"
-            "🌐 Web Sitemiz: https://dalamanairportsuites.com\n\n"
+            "🌐 Web Sitemiz: https://dalamanairportsuites.com/\n\n"
             "✨ Keyifli ve huzurlu bir konaklama dileriz!"
         ).format(**params)
     else: # en
@@ -304,10 +304,10 @@ def get_multilingual_welcome(lang: str, params: dict) -> str:
             "📶 *Wi-Fi:* {wifi_name}\n"
             "🔐 *Wi-Fi Password:* {wifi_password}\n\n"
             "🎁 *EXCLUSIVE GIFT / %10 DIRECT BOOKING DISCOUNT:*\n"
-            "Reply to this message with *\"YES\"* or *\"EVET\"* to activate your *%10 DIRECT DISCOUNT (Promo Code: DAS10)* for extra nights or your next booking via our website (dalamanairportsuites.com)!\n\n"
+            "Reply to this message with *\"YES\"* or *\"EVET\"* to activate your *%10 DIRECT DISCOUNT (Promo Code: DAS10)* for extra nights or your next booking via our website (https://dalamanairportsuites.com/)!\n\n"
             "🚗 *Location:* Only 10 mins from Dalaman International Airport (DLM).\n"
             "📞 WhatsApp Direct: +90 542 367 45 99\n"
-            "🌐 Website: https://dalamanairportsuites.com\n\n"
+            "🌐 Website: https://dalamanairportsuites.com/\n\n"
             "✨ We wish you a wonderful and relaxing stay!"
         ).format(**params)
 
