@@ -2,6 +2,7 @@ import os
 import re
 import sqlite3
 import datetime
+import time
 import requests
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Form
@@ -138,6 +139,7 @@ def send_whatsapp(body_text):
                 add_log(f"WhatsApp gönderilemedi ({phone}): {err_data}", "error")
         except Exception as e:
             add_log(f"WhatsApp Gateway bağlantı hatası ({phone}): {str(e)}", "error")
+        time.sleep(1.5)
             
     return success_count > 0
 
