@@ -262,8 +262,18 @@ def scheduled_job():
     
     sync_calendar()
     
-    if current_hm == morning_time:
-        check_daily_reminders()
+    # Sabah saati geldiyse veya gecildiyse henuz iletilmemis gunluk hatirlatmalari gonder
+    try:
+        now = datetime.datetime.now()
+        parts = morning_time.split(":")
+        m_hour = int(parts[0])
+        m_minute = int(parts[1]) if len(parts) > 1 else 0
+        morning_dt = now.replace(hour=m_hour, minute=m_minute, second=0, microsecond=0)
+        if now >= morning_dt:
+            check_daily_reminders()
+    except Exception:
+        if current_hm >= morning_time:
+            check_daily_reminders()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
