@@ -15,49 +15,49 @@ Includes a built-in **100% Free Self-Hosted WhatsApp Web Gateway (Baileys)**: no
 
 ---
 
-## 🖥️ Dashboard Overview (What's on the Panel?)
+## 🖥️ Modern 4-Tab Web Dashboard (`http://<SERVER-IP>:8000`)
 
-The web dashboard (`http://<SERVER-IP>:8000`) provides real-time control and visibility over your property:
+The web dashboard is organized into 4 intuitive tabs for clutter-free operations:
 
-1. **Top Header & Control Bar:**
-   - **Property Title:** Identifies the active suite and server status.
-   - **WhatsApp Gateway Badge:** Shows live connection status (`🟢 WhatsApp: Connected`). Clicking it opens the interactive QR pairing modal to link any WhatsApp number within seconds.
-   - **"Sync Now" (`Şimdi Eşle`):** Manually triggers an immediate Booking.com iCal calendar sync and processes today's check-in/out alerts.
-   - **"Booking Alert Test" (`Rezervasyon Bildirimi Testi` - Violet Button):** Instantly re-dispatches the newest booking notification to all registered WhatsApp numbers.
-   - **"Send Test" (`Test Gönder` - Green Button):** Dispatches a quick system test alert to verify gateway communication.
+1. **🏨 Reception & Active Guests (`Resepsiyon & Misafirler`):**
+   - **Live KPI Counter Cards:** Real-time metrics for Total Reservations, Today's Check-ins, Current Stays, Today's Check-outs, and Upcoming Arrivals.
+   - **Instant Filter Pills & Search:** Filter bookings instantly by status (*All*, *Today's Check-in*, *Staying*, *Today's Check-out*, *Upcoming*) or search by name/UID in real-time.
+   - **Guest Language Badges:** Automatically identifies guest language (🇩🇪 DE, 🇷🇺 RU, 🇹🇷 TR, 🇬🇧 EN) based on phone country code.
+   - **Interactive Action Buttons:**
+     - `[Karşıla]` (Welcome & Wi-Fi in guest's native language)
+     - `[🎁 Uzat]` (Send €75 stay extension upsell offer)
+     - `[🔔 Bildir]` (Re-dispatch new reservation alert to staff)
 
-2. **Today's Status Cards:**
-   - **🔴 Today's Check-outs:** Highlights rooms departing today, check-out times, and housekeeping readiness badges.
-   - **🟢 Today's Check-ins:** Highlights incoming guests, arrival dates, and key handover/police identity registration badges.
+2. **🧪 Test & Sandbox Laboratory (`Test Laboratuvarı`):**
+   - **Safe Sandbox Mode Toggle:** Redirects all outbound guest notifications to the host's test phone (`+905423674599`) so real guests are never disturbed during testing.
+   - **1-Click Multilingual Test Dispatches:** Pre-built test triggers for Welcome messages (🇩🇪 German, 🇷🇺 Russian, 🇹🇷 Turkish, 🇬🇧 English), Stay Extension (€75), and %10 Web Discount Kupon (`DAS10`).
 
-3. **Active Reservations Table:**
-   - Displays the last 50 reservations with real-time status badges (*Staying*, *Check-in Today*, *Check-out Today*, *Checked Out*, *Upcoming*).
-   - **Guest Welcome Dispatcher (`Karşıla`):** Input the guest's phone number to send a personalized bilingual (EN/TR) welcome message with Wi-Fi credentials, Google Maps location, and check-in times.
-   - **Re-Notify Button (`[🔔 Bildir]`):** Resends the new reservation WhatsApp alert for that specific booking anytime.
+3. **📢 Direct Marketing & CRM (`CRM & Kampanyalar`):**
+   - **Targeted Seasonal & Flight Campaigns:** Send customized WhatsApp broadcast offers to past guests.
+   - **Anti-Spam Throttling:** Built-in 10-second delay between outgoing messages to safeguard WhatsApp number reputation.
 
-4. **Live System Event Log (Console):**
-   - Displays real-time, timestamped operational logs (calendar poll results, WhatsApp delivery status, error traces) directly in the UI.
+4. **⚙️ Settings & Integration (`Ayarlar & Entegrasyon`):**
+   - **Property & Calendar Config:** Set property name, staff WhatsApp numbers, and Booking.com iCal URL.
+   - **Automatic 15:00 Check-in Welcome:** Toggle fully hands-free automated dispatch of Welcome & Wi-Fi messages at check-in time (`15:00`).
+   - **Stay Extension Pricing:** Configure default extension price (`€75`) and evening offer dispatch hour (`20:00`).
+   - **6 Customizable Message Templates:** Rich textarea editors for all automated templates (`msg_welcome`, `msg_extension`, `msg_discount_confirmed`, `msg_new_booking`, `msg_checkin`, `msg_checkout`) with dynamic variable tags (`{suite_name}`, `{checkin}`, `{checkout}`, `{price}`, `{discount_code}`).
+   - **Live Event Log Console:** Real-time stream of calendar syncs, WhatsApp deliveries, and automated scheduler actions.
 
-5. **Settings & Custom Message Templates Form:**
-   - Configure suite name, destination WhatsApp numbers (multiple numbers or group IDs), morning reminder dispatch hour (`09:00`), and dynamic message templates using `{suite_name}`, `{checkin}`, `{checkout}` variables.
+---
 
 ## 🌟 Key Features
 
 - 🆓 **100% Free Self-Hosted WhatsApp Gateway:** Powered by Baileys & Node.js running directly on your server. Pair your phone once via QR code directly in the web UI. No paid subscriptions, no per-message fees!
-- 🛎 **Instant Booking Alerts:** Automatically polls the Booking.com iCal feed every 2 minutes. When a new reservation arrives, it sends an immediate WhatsApp notification to the host, reception, or staff group.
-- 🚨 **Legal Compliance & Police (KBS) Reminders:** 
-  - Morning Check-in alert (`09:00` by default): Reminds staff of key handover and mandatory police guest registration.
-  - Morning Check-out alert: Reminds staff to start housekeeping and file the police check-out notification.
-- 🛡️ **Fail-Safe & Self-Healing Reminder Scheduler:** Evaluates pending daily reminders against database state (`>= morning_time`). Even if the container reboots or the 2-minute polling interval drifts past 09:00, morning check-in/out messages are guaranteed to dispatch without being skipped!
-- 🎁 **Smart Last-Minute Stay Extension (Upsell) Automation:** If tomorrow is open in the calendar (no incoming guest), the bot automatically sends an evening (`20:00`) personalized WhatsApp extension offer to departing guests at a direct discounted rate (e.g. `€75`), turning empty nights into commission-free cash revenue!
-- 🔑 **Guest Welcome & Self Check-in Dispatcher:**
-  - One-click personalized bilingual (English & Turkish) WhatsApp message to incoming guests containing Wi-Fi credentials, check-in (`15:00`) / check-out (`11:00`) hours, and Google Maps pin.
-- 🌐 **Modern & Responsive Web Dashboard:** Accessible at `http://<IP>:8000`, built with Tailwind CSS, showing today's arrivals, departures, live logs, active reservations, and an interactive WhatsApp QR pairing modal.
-- 🕒 **Smart Status Transition:** On check-out day, the reservation badge shows *"Check-out Today"* before 11:00 AM, and automatically turns into *"Checked Out"* after standard check-out time (11:00 AM).
-- 📱 **Multi-Number & WhatsApp Group Support:** Delivers alerts to multiple comma-separated phone numbers (`+905...,+905...`) or directly to a shared WhatsApp staff group.
-- ✏️ **Customizable Message Templates:** Edit WhatsApp notification templates (`{suite_name}`, `{checkin}`, `{checkout}`) directly from the web dashboard with a single click.
-- 💾 **Persistent SQLite Database:** Retains state across server reboots, ensuring no duplicate messages are ever sent.
-- 🚀 **Zero Cloud Subscription Fees:** Runs entirely on your own local server (Proxmox LXC, Raspberry Pi, or Linux VPS) with no monthly quotas (unlike Make.com or Zapier).
+- 🌐 **4-Language Native Guest Messaging:** Automatically detects guest nationality (German 🇩🇪, Russian 🇷🇺, Turkish 🇹🇷, English 🇬🇧) from their phone dial code and sends tailored localized messages.
+- 🕒 **Zero-Click Automatic 15:00 Welcome Dispatch:** Automatically fires at 15:00 on arrival day, welcoming guests with Wi-Fi passwords, Google Maps navigation pin, and direct website link (`https://dalamanairportsuites.com/`).
+- 🤖 **Two-Way Conversational Webhook:** When guests reply `"EVET"` / `"YES"` / `"DAS10"`, the bot immediately returns their %10 direct booking discount coupon (`DAS10`) and instantly pings the host on WhatsApp.
+- 🧪 **Safe Sandbox Environment:** Toggle Sandbox Mode with one click to test every automated scenario safely on your personal phone before going live.
+- 🛎 **Instant Booking Alerts:** Automatically polls the Booking.com iCal feed every 2 minutes. When a new reservation arrives, it sends an immediate WhatsApp notification to the host or reception group.
+- 🚨 **Legal Compliance & Police (KBS) Reminders:** Morning Check-in and Check-out alerts to remind staff of key handover, housekeeping, and mandatory police identity reporting.
+- 🛡️ **Fail-Safe & Self-Healing Scheduler:** Uses `>= morning_time` database evaluation so no morning or evening notifications are ever skipped even after server reboots.
+- 🎁 **Smart Last-Minute Stay Extension (Upsell):** If tomorrow is empty, the bot automatically dispatches an evening (`20:00`) extension offer at a direct discounted rate (e.g. `€75`), converting vacant nights into direct revenue.
+- ✏️ **Full Template Customization:** Complete control over message wording from the Settings tab without editing source code.
+- 💾 **Persistent SQLite Database:** Retains state across server reboots, guaranteeing zero duplicate messages.
 
 ---
 
@@ -185,49 +185,49 @@ Sistem, bünyesinde barındırdığı **%100 Ücretsiz Yerel WhatsApp Gateway (B
 
 ---
 
-## 🖥️ Web Yönetim Paneli İncelemesi (Panelde Neler Var?)
+## 🖥️ Modern 4 Sekmeli Web Yönetim Paneli (`http://<SUNUCU-IP>:8000`)
 
-Tarayıcınızdan `http://<SUNUCU-IP>:8000` adresine girdiğinizde sizi karşılayan modern arayüz ve bileşenler:
+Yönetim paneli tüm operasyonları karmaşadan uzak, 4 mantıksal sekmeyle yönetmenizi sağlar:
 
-1. **Üst Kontrol & Durum Çubuğu:**
-   - **Tesis Başlığı & Canlı Tarih:** Tesis adı ve güncel sistem tarihini gösterir.
-   - **WhatsApp Bağlantı Rozeti:** Durumu canlı gösterir (`🟢 WhatsApp: Bağlı (Aktif)`). Tıklandığında telefonla hemen okutabileceğiniz **canlı QR kod eşleme penceresini** açar.
-   - **"Şimdi Eşle" Butonu (Mavi):** Booking takvimini hemen indirir ve bugünkü giriş/çıkış kontrollerini anında çalıştırır.
-   - **"Rezervasyon Bildirimi Testi" (Mor Buton):** En son gelen rezervasyonu alıp WhatsApp numaralarınıza *"🛎 YENİ BOOKING REZERVASYONU DÜŞTÜ!"* bildirimini manuel olarak anında tekrar gönderir.
-   - **"Test Gönder" Butonu (Yeşil):** WhatsApp ağ geçidinin ve numaralarınızın çalıştığını doğrulamak için genel bir test mesajı iletir.
+1. **🏨 Resepsiyon & Misafirler Sekmesi:**
+   - **Canlı KPI İstatistik Kartları:** Toplam Rezervasyon, Bugün Giriş, Konaklayanlar, Bugün Çıkış ve Gelecek Rezervasyon sayılarını anlık gösterir.
+   - **Filtre Hapları (Pills) & Canlı Arama:** Rezervasyonları tek tıkla (*Tümü*, *Bugün Giriş*, *Konaklayanlar*, *Bugün Çıkış*, *Gelecek*) filtreleyebilir, isim veya rezervasyon koduna göre anlık arayabilirsiniz.
+   - **Otomatik Dil Rozetleri:** Misafirin telefon ülke koduna göre ana dilini tespit eder (🇩🇪 DE, 🇷🇺 RU, 🇹🇷 TR, 🇬🇧 EN).
+   - **Aksiyon Butonları:**
+     - `[Karşıla]` (Misafirin ana dilinde Wi-Fi & karşılama mesajı)
+     - `[🎁 Uzat]` (Ertesi gün boşsa €75 indirimli doğrudan uzatma teklifi)
+     - `[🔔 Bildir]` (İlgili rezervasyonun personel bildirimini tekrar gönder)
 
-2. **Günün Durum Kartları:**
-   - **🔴 Bugün Çıkış (Check-out) Yapacaklar:** O gün tesisten ayrılacak odaları, çıkış saatini ve temizlik hazırlık rozetini gösterir.
-   - **🟢 Bugün Giriş (Check-in) Yapacaklar:** O gün otele giriş yapacak yeni misafirleri ve KBS kimlik kayıt bildirim uyarısını gösterir.
+2. **🧪 Test Laboratuvarı Sekmesi:**
+   - **Güvenli Sandbox (İzolasyon) Modu:** Tüm giden mesajları misafirleri hiç rahatsız etmeden doğrudan yöneticinin test telefonuna (`+905423674599`) yönlendirir.
+   - **Tek Tıkla 4 Dilde Test Gönderimi:** Karşılama mesajları (🇩🇪 Almanca, 🇷🇺 Rusça, 🇹🇷 Türkçe, 🇬🇧 İngilizce), Konaklama Uzatma (€75) ve %10 Doğrudan İndirim Kuponu (`DAS10`) için tek tıkla test butonları.
 
-3. **Aktif Rezervasyon Listesi Tablosu:**
-   - Booking takviminden çekilen son 50 rezervasyonun giriş/çıkış tarihleri, sistem kayıt zamanı ve dinamik durum rozetleri (*Konaklıyor*, *Bugün Giriş*, *Bugün Çıkış*, *Çıkış Yaptı*, *Gelecek*).
-   - **Misafir Karşılama (Self Check-in & Wi-Fi):** Misafirin WhatsApp numarasını girip **`[Karşıla]`** butonuna basarak Wi-Fi şifresi, Google Haritalar konumu ve giriş saatlerini içeren çift dilli (Türkçe & İngilizce) karşılama mesajını tek tıkla gönderebilirsiniz.
-   - **`[🔔 Bildir]` Butonu:** İlgili satırdaki rezervasyonun "Yeni Rezervasyon Düştü" WhatsApp bildirimini tek tıkla tekrar tetikler.
+3. **📢 CRM & Kampanyalar Sekmesi:**
+   - **Sezonluk ve Uçuş İndirim Kampanyaları:** Geçmiş misafirlere doğrudan WhatsApp duyuruları hazırlayıp gönderme modülü.
+   - **10 Saniyelik Anti-Spam Koruması:** WhatsApp numarasının güvenliği için mesajlar arasına otomatik gecikme uygular.
 
-4. **Canlı Sistem Olay Günlüğü (Terminal Konsolu):**
-   - Son 15 işlemin (takvim eşlemeleri, başarıyla iletilen WhatsApp mesajları, hata kayıtları) zaman damgalı canlı akışını sunar.
+4. **⚙️ Ayarlar & Entegrasyon Sekmesi:**
+   - **Tesis & Takvim Bilgileri:** Tesis adı, personel WhatsApp numaraları ve Booking.com iCal bağlantısı.
+   - **Saat 15:00 Otomatik Karşılama:** Bugün giriş yapacak misafirlere saat 15:00'te sıfır tıklamayla otomatik karşılama mesajı gönderme anahtarı ve saat ayarı.
+   - **Uzatma Fiyatı:** Standart uzatma fiyatı (`€75`) ve akşam teklif saati (`20:00`).
+   - **6 Adet Zengin Mesaj Şablonu:** Sistemdeki tüm mesajları (`msg_welcome`, `msg_extension`, `msg_discount_confirmed`, `msg_new_booking`, `msg_checkin`, `msg_checkout`) web panelinden dinamik değişkenlerle (`{suite_name}`, `{checkin}`, `{checkout}`, `{price}`, `{discount_code}`) düzenleyebilme.
+   - **Canlı Sistem Olay Günlüğü:** Takvim eşlemeleri, gönderim durumları ve planlayıcı loglarının canlı terminal akışı.
 
-5. **Sistem Ayarları & Özel Mesaj Şablonları:**
-   - Tesis Adı, WhatsApp Numaraları (virgülle birden çok numara veya WhatsApp Grup ID), sabah hatırlatma saati (`09:00`), Wi-Fi bilgileri ve dinamik mesaj şablonları (`{suite_name}`, `{checkin}`, `{checkout}` değişkenleri) tek tıkla düzenlenebilir.
+---
 
 ## 🌟 Öne Çıkan Özellikler
 
 - 🆓 **%100 Ücretsiz & Kalıcı Yerel WhatsApp Ağ Geçidi:** Baileys & Node.js altyapısıyla kendi sunucunuzda çalışır. Web panelinden tek tıkla QR kod okutarak kendi WhatsApp numaranızı bağlayın; aylık ücret veya mesaj kotası derdini unutun.
+- 🌐 **4 Dilde Otomatik Misafir Algılama:** Telefon kodundan (Almanca 🇩🇪, Rusça 🇷🇺, Türkçe 🇹🇷, İngilizce 🇬🇧) misafirin dilini anlayarak kendi dilinde özel mesaj iletir.
+- 🕒 **Sıfır Tıklama ile Saat 15:00 Otomatik Karşılama:** Giriş günü saat 15:00'te misafire Wi-Fi şifresi, Google Haritalar konumu ve doğrudan web sitesi adresi (`https://dalamanairportsuites.com/`) otomatik iletilir.
+- 🤖 **Çift Yönlü Akıllı Yanıt Webhook'u:** Misafir gelen teklife veya mesaja `"EVET"`, `"YES"` veya `"DAS10"` yazdığında sistem anında %10 indirim kuponunu ve web rezervasyon bağlantısını gönderir; yöneticiye anında WhatsApp'tan haber verir.
+- 🧪 **Güvenli Laboratuvar & Sandbox:** Misafirlerinizi rahatsız etmeden tüm senaryoları kendi telefonunuzda (`+905423674599`) deneyebileceğiniz güvenli test modu.
 - 🛎 **Anlık Rezervasyon Bildirimi:** Booking.com iCal takvimini 2 dakikada bir otomatik tarar; yeni rezervasyon düştüğü an yöneticiye veya personele WhatsApp mesajı iletir.
-- 🚨 **KBS / Polis Kimlik Bildirimi Hatırlatıcıları:** 
-  - Her sabah belirlediğiniz saatte (örn. `09:00`) o günkü girişler için kimlik bildirimi uyarısı.
-  - O günkü çıkışlar için oda temizlik hazırlığı ve KBS çıkış bildirimi uyarısı.
-- 🛡️ **Sıfır Mesaj Kaçırma Garantili Akıllı Zamanlayıcı:** Sabah hatırlatıcıları (`09:00`), veritabanı durumuyla entegre `>= morning_time` algoritmasıyla yönetilir. Sunucu saat 09:00'da kapalı olsa veya döngü dakikayı atlasa bile, sistem açıldığı ilk anda günün atılmamış Check-in / Check-out mesajlarını otomatik tespit edip anında iletir.
-- 🎁 **Akıllı Son Dakika Konaklama Uzatma (Upsell) Otomasyonu:** Ertesi gün takvimde oda boşsa (yeni giriş yoksa), bot akşam saat 20:00'de yarın çıkacak misafire indirimli nakit uzatma teklifi (`€75`) içeren WhatsApp mesajını otomatik iletir. Boş geceleri komisyonsuz doğrudan nakit gelire dönüştürür.
-- 🔑 **Misafir Karşılama (Self Check-in & Wi-Fi) Otomasyonu:**
-  - Giriş yapacak misafirlere tek tıkla Wi-Fi şifresi, giriş (`15:00`) ve çıkış (`11:00`) saatleri ile Google Haritalar konumunu içeren çift dilli (Türkçe & İngilizce) karşılama mesajı gönderme.
-- 🌐 **Modern & Responsive Web Paneli:** `http://<IP>:8000` adresinden erişilebilen, Tailwind CSS ile tasarlanmış yönetim arayüzü ve entegre WhatsApp QR eşleme penceresi.
-- 🕒 **Akıllı Saat & Durum Takibi:** Çıkış günü saat 11:00 öncesi *"Bugün Çıkış"*, saat 11:00 sonrası otomatik olarak *"Çıkış Yaptı"* rozetine geçer.
-- 📱 **Çoklu Numara & Grup Bildirimi:** Virgülle ayrılmış birden fazla telefon numarasına (`+905...,+905...`) veya personele ait WhatsApp grubuna aynı anda bildirim gönderir.
-- ✏️ **Dinamik Mesaj Şablonları:** WhatsApp mesaj şablonlarını (`{suite_name}`, `{checkin}`, `{checkout}`) web arayüzünden tek tıkla özelleştirebilme.
-- 💾 **Kalıcı SQLite Hafızası:** Sunucu yeniden başlasa bile veriler kaybolmaz, aynı rezervasyon için mükerrer mesaj atmaz.
-- 🚀 **Sıfır Bulut Maliyeti:** Make.com veya Zapier gibi aylık kota sınırlaması olan servisler yerine kendi Proxmox sunucunuzda ücretsiz çalışır.
+- 🚨 **KBS / Polis Kimlik Bildirimi Hatırlatıcıları:** Her sabah giriş yapacaklar için kimlik bildirimi, çıkış yapacaklar için temizlik hazırlığı ve KBS çıkış uyarısı.
+- 🛡️ **Sıfır Mesaj Kaçırma Garantili Akıllı Zamanlayıcı:** Veritabanı durumuyla entegre `>= morning_time` algoritması sayesinde sunucu kapalı kalıp açılsa dahi sabah bildirimleri asla atlanmaz.
+- 🎁 **Akıllı Son Dakika Konaklama Uzatma (Upsell) Otomasyonu:** Ertesi gün takvimde oda boşsa, bot akşam saat 20:00'de yarın çıkacak misafire indirimli nakit uzatma teklifi (`€75`) iletir; boş geceleri doğrudan nakit gelire dönüştürür.
+- ✏️ **Tamamen Özelleştirilebilir Şablonlar:** 6 farklı mesaj şablonunun tamamını kod değiştirmeden Ayarlar sekmesinden düzenleme imkanı.
+- 💾 **Kalıcı SQLite Hafızası:** Sunucu yeniden başlasa bile veriler korunur, mükerrer mesaj gönderimi engellenir.
 
 ---
 
@@ -409,6 +409,14 @@ Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır. Dilediğiniz gibi geli�
 
 ## 📝 Sürüm Notları / Changelog
 
+- **v1.4.0 (14 Eylül 2026):**
+  - **4 Sekmeli Modern Yönetim Paneli:** Resepsiyon & Misafirler, Test Laboratuvarı, CRM & Kampanyalar ve Ayarlar & Entegrasyon sekmeleri ile karmaşadan uzak temiz arayüz.
+  - **Dinamik Tablo Filtreleme & Arama:** Rezervasyonları anlık durumlarına göre (Tümü, Bugün Giriş, Konaklayanlar, Bugün Çıkış, Gelecek) filtreleme ve canlı arama.
+  - **4 Dilde Akıllı Misafir Algılama:** Misafir telefon koduna göre (🇩🇪 Almanca, 🇷🇺 Rusça, 🇹🇷 Türkçe, 🇬🇧 İngilizce) otomatik dil belirleme ve ilgili dilde şablon oluşturma.
+  - **Saat 15:00 Otomatik Karşılama:** Bugün giriş yapacak misafirlere saat 15:00'te sıfır tıklama ile Wi-Fi şifresi, harita ve doğrudan web sitesi adresi (`https://dalamanairportsuites.com/`) iletme.
+  - **Çift Yönlü Akıllı Webhook & Doğrudan İndirim Kuponu:** Misafir "EVET", "YES" veya "DAS10" yazdığında anında %10 kupon kodu (`DAS10`) iletilmesi ve yöneticiye anlık WhatsApp uyarısı düşmesi.
+  - **İzole Test Laboratuvarı & Güvenli Sandbox:** Misafirleri rahatsız etmeden tüm testleri yöneticinin telefonuna (`+905423674599`) yönlendiren 1 tık test laboratuvarı.
+  - **Geri Yüklenen 6 Adet Zengin Şablon Editörü:** Ayarlar sekmesinden tüm mesajların metnini doğrudan tarayıcıdan düzenleyebilme.
 - **v1.3.0 (14 Eylül 2026):**
   - **Akıllı Konaklama Uzatma (Stay Extension Upsell):** Takvimde ertesi gün boş olduğunda yarın çıkacak misafire akşam saat 20:00'de otomatik veya paneldeki `[🎁 Uzat]` butonuyla tek tıkla WhatsApp üzerinden indirimli uzatma teklifi iletme özelliği eklendi.
   - **Dinamik Fiyat & Saat Ayarları:** Web panelinden uzatma teklif fiyatı (`€75`), teklif saati (`20:00`) ve özel İngilizce/Türkçe şablon düzenlenebilir hale getirildi.
