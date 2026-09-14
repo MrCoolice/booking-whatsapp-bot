@@ -20,6 +20,7 @@ Includes a built-in **100% Free Self-Hosted WhatsApp Web Gateway (Baileys)**: no
 - 🚨 **Legal Compliance & Police (KBS) Reminders:** 
   - Morning Check-in alert (`09:00` by default): Reminds staff of key handover and mandatory police guest registration.
   - Morning Check-out alert: Reminds staff to start housekeeping and file the police check-out notification.
+- 🛡️ **Fail-Safe & Self-Healing Reminder Scheduler:** Evaluates pending daily reminders against database state (`>= morning_time`). Even if the container reboots or the 2-minute polling interval drifts past 09:00, morning check-in/out messages are guaranteed to dispatch without being skipped!
 - 🔑 **Guest Welcome & Self Check-in Dispatcher:**
   - One-click personalized bilingual (English & Turkish) WhatsApp message to incoming guests containing Wi-Fi credentials, check-in (`15:00`) / check-out (`11:00`) hours, and Google Maps pin.
 - 🌐 **Modern & Responsive Web Dashboard:** Accessible at `http://<IP>:8000`, built with Tailwind CSS, showing today's arrivals, departures, live logs, active reservations, and an interactive WhatsApp QR pairing modal.
@@ -160,6 +161,7 @@ Sistem, bünyesinde barındırdığı **%100 Ücretsiz Yerel WhatsApp Gateway (B
 - 🚨 **KBS / Polis Kimlik Bildirimi Hatırlatıcıları:** 
   - Her sabah belirlediğiniz saatte (örn. `09:00`) o günkü girişler için kimlik bildirimi uyarısı.
   - O günkü çıkışlar için oda temizlik hazırlığı ve KBS çıkış bildirimi uyarısı.
+- 🛡️ **Sıfır Mesaj Kaçırma Garantili Akıllı Zamanlayıcı:** Sabah hatırlatıcıları (`09:00`), veritabanı durumuyla entegre `>= morning_time` algoritmasıyla yönetilir. Sunucu saat 09:00'da kapalı olsa veya döngü dakikayı atlasa bile, sistem açıldığı ilk anda günün atılmamış Check-in / Check-out mesajlarını otomatik tespit edip anında iletir.
 - 🔑 **Misafir Karşılama (Self Check-in & Wi-Fi) Otomasyonu:**
   - Giriş yapacak misafirlere tek tıkla Wi-Fi şifresi, giriş (`15:00`) ve çıkış (`11:00`) saatleri ile Google Haritalar konumunu içeren çift dilli (Türkçe & İngilizce) karşılama mesajı gönderme.
 - 🌐 **Modern & Responsive Web Paneli:** `http://<IP>:8000` adresinden erişilebilen, Tailwind CSS ile tasarlanmış yönetim arayüzü ve entegre WhatsApp QR eşleme penceresi.
@@ -292,6 +294,17 @@ journalctl -u dalaman-gateway -f
 ## 📄 Lisans
 
 Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır. Dilediğiniz gibi geliştirebilir ve kendi tesislerinizde kullanabilirsiniz.
+
+---
+
+## 📝 Sürüm Notları / Changelog
+
+- **v1.2.1 (14 Eylül 2026):**
+  - **Sıfır Mesaj Kaçırma Düzeltmesi (Reliable Scheduler):** Dakikalık eşitlik kontrolü (`== morning_time`) yerine veritabanı durumunu baz alan `>= morning_time` zamanlayıcı mantığına geçildi. 2 dakikalık polling aralıklarının sabah 09:00'ı teğet geçmesi sorunu tamamen giderildi.
+  - **Kendi Kendini Onarma (Self-Healing):** Sunucu 09:00 sonrasında açılsa bile atılmamış Check-in / Check-out bildirimleri ilk kontrolde anında iletilir.
+- **v1.2.0 (13 Eylül 2026):**
+  - **Misafir Karşılama (Self Check-in & Wi-Fi):** Web panelinden misafire tek tıkla Wi-Fi, harita ve giriş detaylarını iletme özelliği eklendi.
+  - **Yerel Baileys WhatsApp Gateway:** Üçüncü parti ücretli API bağımlılığı tamamen kaldırılarak dahili Node.js gateway entegre edildi.
 
 ---
 
