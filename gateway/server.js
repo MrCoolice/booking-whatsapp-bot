@@ -1,4 +1,5 @@
 const express = require('express');
+const http = require('http');
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
 const pino = require('pino');
 const QRCode = require('qrcode');
@@ -60,23 +61,20 @@ async function startSock() {
         }
 
         if (connection === 'close') {
-            const statusCode = (lastDisconnect?.error)?.output?.statusCode;
-            const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+            const shouldReconnect = (lastDisconnect && lastDisconnect.error && lastDisconnect.error.output)
+                ? lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut
+                : true;
+
+            console.log('Baglanti koptu. Yeniden baglaniliyor mu?', shouldReconnect);
             connectionStatus = 'disconnected';
             qrCodeData = null;
             qrCodeImage = null;
             connectedUser = null;
 
-            console.log(`Baglanti kapandi. Yeniden baglanacak mi: ${shouldReconnect} (Kod: ${statusCode})`);
-
             if (shouldReconnect) {
-                setTimeout(() => startSock(), 3000);
+                setTimeout(startSock, 5000);
             } else {
-                console.log('Oturum sonlandi. Lutfen auth klasorunu temizleyip yeniden baslatin.');
-                try {
-                    fs.rmSync(AUTH_DIR, { recursive: true, force: true });
-                } catch (e) {}
-                setTimeout(() => startSock(), 3000);
+                console.log('Oturum kapatildi (Logged out). auth_info klasorunu temizleyip yeniden baslatin.');
             }
         } else if (connection === 'open') {
             connectionStatus = 'connected';
@@ -84,6 +82,58 @@ async function startSock() {
             qrCodeImage = null;
             connectedUser = sock.user ? sock.user.id.split(':')[0] : 'Aktif';
             console.log(`WhatsApp baglantisi basariyla kuruldu! Kullanici: ${connectedUser}`);
+        }
+    });
+
+    // 5. Iki Yonlu Dinleyici (Misafir Yanitlarini Yakalama & Webhook'a Bildirme)
+    sock.ev.on('messages.upsert', async ({ messages, type }) => {
+        if (type !== 'notify') return;
+        for (const msg of messages) {
+            if (!msg.message || msg.key.fromMe) continue;
+            
+            const sender = msg.key.remoteJid;
+            if (!sender || sender.includes('@g.us') || sender === 'status@broadcast') continue;
+
+            const text = msg.message.conversation || 
+                         msg.message.extendedTextMessage?.text || 
+                         msg.message.imageMessage?.caption || '';
+
+            if (!text || !text.trim()) continue;
+
+            const phone = sender.split('@')[0];
+            console.log(`[INBOUND] Misafirden mesaj geldi (${phone}): ${text}`);
+
+            try {
+                const postData = JSON.stringify({
+                    phone: phone,
+                    text: text.trim(),
+                    message_id: msg.key.id,
+                    timestamp: msg.messageTimestamp
+                });
+
+                const reqPost = http.request({
+                    hostname: '127.0.0.1',
+                    port: 8000,
+                    path: '/api/webhook/whatsapp-inbound',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Content-Length': Buffer.byteLength(postData)
+                    },
+                    timeout: 5000
+                }, (resPost) => {
+                    resPost.resume();
+                });
+
+                reqPost.on('error', (err) => {
+                    console.error('[INBOUND WEBHOOK ERROR]:', err.message);
+                });
+
+                reqPost.write(postData);
+                reqPost.end();
+            } catch (e) {
+                console.error('[INBOUND WEBHOOK EXCEPTION]:', e.message);
+            }
         }
     });
 }

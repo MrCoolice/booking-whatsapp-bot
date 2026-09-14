@@ -82,6 +82,42 @@
         </div>
     </div>
 
+    <!-- Booking CSV / TSV Yükleme Modalı -->
+    <div id="csvModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+            <div class="flex items-center justify-between border-b pb-3">
+                <h3 class="font-bold text-slate-900 flex items-center gap-2 text-base">
+                    <i class="fa-solid fa-file-csv text-emerald-600 text-xl"></i> Booking CSV / TSV Yükleme & Eşleştirme
+                </h3>
+                <button onclick="closeCsvModal()" class="text-slate-400 hover:text-slate-600 text-lg cursor-pointer">✕</button>
+            </div>
+            
+            <form id="csvForm" onsubmit="uploadBookingCsv(event)" class="space-y-4">
+                <div class="bg-emerald-50/60 border border-emerald-200 rounded-xl p-3.5 text-xs text-emerald-900 space-y-1.5">
+                    <p class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-emerald-600"></i> Otomatik Akıllı Eşleştirme Motoru</p>
+                    <p class="text-slate-600 leading-relaxed">Booking.com Extranet panelinizden indirdiğiniz <b>CSV veya Excel/TSV</b> dışa aktarma dosyasını buraya yükleyin. Bot misafir telefonlarını uluslararası formatta temizleyip rezervasyonlarınızla otomatik eşleştirir.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Booking Dışa Aktarma Dosyası (.tsv, .csv, .txt)</label>
+                    <input type="file" id="csvFileInput" accept=".csv,.tsv,.txt" required
+                           class="w-full border border-slate-300 rounded-xl p-2 text-xs text-slate-700 file:mr-4 file:py-1.5 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
+                </div>
+
+                <div id="csvUploadProgress" class="hidden text-xs text-slate-500 flex items-center gap-2">
+                    <i class="fa-solid fa-spinner fa-spin text-emerald-600"></i> Dosya işleniyor ve telefonlar eşleştiriliyor...
+                </div>
+
+                <div class="border-t pt-3 flex justify-between items-center text-xs">
+                    <button type="button" onclick="closeCsvModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-1.5 rounded-lg font-medium cursor-pointer">Vazgeç</button>
+                    <button type="submit" id="csvUploadBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Yükle ve Eşle
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Ana İçerik -->
     <main class="max-w-[1600px] w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
         
@@ -179,14 +215,19 @@
             <div class="lg:col-span-2 space-y-6">
                 <!-- Rezervasyon Listesi -->
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-                    <div class="flex items-center justify-between border-b pb-4">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b pb-4">
                         <div>
                             <h2 class="text-lg font-bold text-slate-900">Aktif Rezervasyon Listesi</h2>
-                            <p class="text-xs text-slate-500">Booking takviminden çekilen en son 50 rezervasyon</p>
+                            <p class="text-xs text-slate-500">Booking takviminden ve yüklenen dosyalardan çekilen rezervasyonlar</p>
                         </div>
-                        <span class="text-xs font-semibold bg-slate-100 px-3 py-1 rounded-lg text-slate-600">
-                            {{ reservations|length }} Kayıt
-                        </span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="openCsvModal()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-xs px-3.5 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer transition">
+                                <i class="fa-solid fa-file-arrow-up text-emerald-300"></i> 📂 Booking CSV/TSV Yükle
+                            </button>
+                            <span class="text-xs font-semibold bg-slate-100 px-3 py-1.5 rounded-lg text-slate-600">
+                                {{ reservations|length }} Kayıt
+                            </span>
+                        </div>
                     </div>
 
                     <div class="overflow-x-auto">
@@ -205,17 +246,26 @@
                                 <tr class="hover:bg-slate-50/80 transition">
                                     <td class="py-3 px-2 font-semibold text-slate-800">{{ r.checkin }}</td>
                                     <td class="py-3 px-2 font-semibold text-slate-800">{{ r.checkout }}</td>
-                                    <td class="py-3 px-2">
-                                        {% if r.status == 'Konaklıyor' %}
-                                            <span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Konaklıyor</span>
-                                        {% elif r.status == 'Bugün Giriş' %}
-                                            <span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Bugün Giriş</span>
-                                        {% elif r.status == 'Bugün Çıkış' %}
-                                            <span class="bg-rose-100 text-rose-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Bugün Çıkış</span>
-                                        {% elif r.status == 'Gelecek' %}
-                                            <span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Gelecek</span>
-                                        {% else %}
-                                            <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-0.5 rounded-full font-medium">Çıkış Yaptı</span>
+                                    <td class="py-3 px-2 space-y-1">
+                                        <div>
+                                            {% if r.status == 'Konaklıyor' %}
+                                                <span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Konaklıyor</span>
+                                            {% elif r.status == 'Bugün Giriş' %}
+                                                <span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Bugün Giriş</span>
+                                            {% elif r.status == 'Bugün Çıkış' %}
+                                                <span class="bg-rose-100 text-rose-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Bugün Çıkış</span>
+                                            {% elif r.status == 'Gelecek' %}
+                                                <span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 rounded-full font-medium">Gelecek</span>
+                                            {% else %}
+                                                <span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-0.5 rounded-full font-medium">Çıkış Yaptı</span>
+                                            {% endif %}
+                                        </div>
+                                        {% if r.has_discount %}
+                                        <div>
+                                            <span class="bg-amber-50 text-amber-900 border border-amber-300 text-[10px] px-2 py-0.5 rounded-md font-bold inline-flex items-center gap-1 shadow-xs" title="Misafir 'EVET' yanıtı verdi (%7.5 İndirimli DAS75)">
+                                                <i class="fa-solid fa-tag text-amber-600"></i> %7.5 İndirim Aktif
+                                            </span>
+                                        </div>
                                         {% endif %}
                                     </td>
                                     <td class="py-2.5 px-2">
@@ -242,6 +292,75 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                <!-- Mevsimsel Fırsat & Uçuş Kampanyası (Akıllı Pazarlama Modülü) -->
+                <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-6 border border-slate-700 shadow-lg space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-700 pb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-amber-500/20 text-amber-400 p-2.5 rounded-xl border border-amber-500/30">
+                                <i class="fa-solid fa-plane-departure text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                    Mevsimsel Fırsat & Uçuş Kampanyası <span class="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full font-semibold">CRM Pazarlama</span>
+                                </h3>
+                                <p class="text-xs text-slate-400">Eski misafirlerinize sezona ve Dalaman uçuş fırsatlarına özel WhatsApp teklifi gönderin</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="bg-slate-800 border border-slate-700 text-emerald-400 px-3 py-1 rounded-lg font-medium flex items-center gap-1.5">
+                                <i class="fa-solid fa-shield-halved"></i> 10sn Anti-Spam Korumalı
+                            </span>
+                        </div>
+                    </div>
+
+                    <form id="campaignForm" onsubmit="submitCampaign(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">Hazır Mevsimsel Kampanya Teması</label>
+                                <select id="campaignPresetSelect" onchange="onPresetChange()" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer">
+                                    <option value="autumn">🍂 Sonbahar: Dalaman'da Deniz Hala Sıcacık & Ucuz Uçuşlar (Ekim-Kasım)</option>
+                                    <option value="winter">❄️ Kış & Termal: Sultaniye Kaplıcaları & Erken Rezervasyon (Aralık-Şubat)</option>
+                                    <option value="spring">🌸 İlkbahar: Likya Yolu Yürüyüşleri & Sezon Açılışı (Mart-Mayıs)</option>
+                                    <option value="summer">☀️ Yaz: Sarıgerme Kumsalları & Göcek Koyları (Haziran-Ağustos)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">Hedef Alıcılar</label>
+                                <select id="campaignTargetSelect" name="target" onchange="onTargetChange()" class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer">
+                                    <option value="opted_in">🎯 Karşılama İletilmiş / Onay Vermiş Misafirler (Önerilen)</option>
+                                    <option value="all_phones">👥 Rehberdeki Tüm Kayıtlı Misafirler</option>
+                                    <option value="custom">📱 Özel Tek Bir Numaraya Test Gönder</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="customPhoneRow" class="hidden">
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Test Gönderilecek Telefon Numarası</label>
+                            <input type="text" id="campaignCustomPhone" name="custom_phone" placeholder="+905423674599" 
+                                   class="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-xl px-3 py-2 font-mono outline-none focus:ring-2 focus:ring-amber-500">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-xs font-semibold text-slate-300">Gönderilecek WhatsApp Mesaj Metni</label>
+                                <span class="text-[11px] text-slate-400">Google Flights DLM linki otomatiktir</span>
+                            </div>
+                            <textarea id="campaignMessageText" name="message" rows="6" required
+                                      class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-3 font-sans outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-2">
+                            <p class="text-[11px] text-slate-400">
+                                <i class="fa-solid fa-circle-info text-amber-400 mr-1"></i> WhatsApp hesabınızın banlanmaması için her mesaj arasında 10 saniyelik doğal gecikme uygulanır.
+                            </p>
+                            <button type="submit" id="campaignSubmitBtn" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 transition shadow-md cursor-pointer whitespace-nowrap">
+                                <i class="fa-solid fa-paper-plane"></i> Kampanyayı Başlat (10sn Güvenli)
+                            </button>
+                        </div>
+                    </form>
                 </div>
 
                 <!-- Canlı Sistem Olay Günlüğü (Rezervasyonların Altında) -->
@@ -377,8 +496,13 @@
                         </div>
 
                         <div>
-                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">🌟 Misafire Otomatik Karşılama & Wi-Fi Şablonu</label>
-                            <textarea name="msg_welcome" rows="4" class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 font-sans">{{ config.msg_welcome }}</textarea>
+                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">🌟 Misafire Otomatik Karşılama & Wi-Fi Şablonu (veya %7.5 Daveti)</label>
+                            <textarea name="msg_welcome" rows="5" class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 font-sans">{{ config.msg_welcome }}</textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">🎉 Misafir "EVET/YES" Yazınca Gidecek %7.5 İndirim Onayı (Kupon: DAS75)</label>
+                            <textarea name="msg_discount_confirmed" rows="4" class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 font-sans">{{ config.msg_discount_confirmed or "🎉 *Congratulations! / Tebrikler!*\n\nYour *%7.5 DISCOUNT* promo code has been activated:\n🏷 *PROMO CODE: DAS75*\n\nYou can use this code for:\n✅ Extending your current stay (extra nights)\n✅ Your next direct booking with Dalaman Airport Suite (Save platform commission + %7.5 off)\n\nSimply message us on WhatsApp when booking!\n\nWishing you a fantastic stay! 🌴" }}</textarea>
                         </div>
 
                         <div>
@@ -599,7 +723,115 @@
             }
         }
 
+        // Booking CSV / TSV Yükleme Fonksiyonları
+        function openCsvModal() {
+            document.getElementById('csvModal').classList.remove('hidden');
+        }
+
+        function closeCsvModal() {
+            document.getElementById('csvModal').classList.add('hidden');
+            document.getElementById('csvForm').reset();
+            document.getElementById('csvUploadProgress').classList.add('hidden');
+            document.getElementById('csvUploadBtn').disabled = false;
+        }
+
+        async function uploadBookingCsv(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('csvFileInput');
+            if (!fileInput.files.length) {
+                showAlert('Lütfen bir dosya seçin', false);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            const progress = document.getElementById('csvUploadProgress');
+            const submitBtn = document.getElementById('csvUploadBtn');
+            progress.classList.remove('hidden');
+            submitBtn.disabled = true;
+
+            try {
+                const res = await fetch('/api/reservation/import-csv', {
+                    method: 'POST',
+                    body: formData
+                });
+                const json = await res.json();
+                showAlert(json.message, json.status === 'ok');
+                if (json.status === 'ok') {
+                    closeCsvModal();
+                    setTimeout(() => location.reload(), 1500);
+                }
+            } catch (err) {
+                showAlert('Dosya yüklenirken hata oluştu: ' + err, false);
+            } finally {
+                progress.classList.add('hidden');
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Mevsimsel Kampanya Fonksiyonları
+        let campaignPresetsData = [];
+
+        async function loadCampaignPresets() {
+            try {
+                const res = await fetch('/api/campaign/presets');
+                campaignPresetsData = await res.json();
+                onPresetChange();
+            } catch (e) {
+                console.error('Kampanya şablonları yüklenemedi:', e);
+            }
+        }
+
+        function onPresetChange() {
+            const select = document.getElementById('campaignPresetSelect');
+            const presetId = select.value;
+            const found = campaignPresetsData.find(p => p.id === presetId);
+            if (found) {
+                document.getElementById('campaignMessageText').value = found.template;
+            }
+        }
+
+        function onTargetChange() {
+            const target = document.getElementById('campaignTargetSelect').value;
+            const customRow = document.getElementById('customPhoneRow');
+            if (target === 'custom') {
+                customRow.classList.remove('hidden');
+            } else {
+                customRow.classList.add('hidden');
+            }
+        }
+
+        async function submitCampaign(e) {
+            e.preventDefault();
+            const form = document.getElementById('campaignForm');
+            const formData = new FormData(form);
+            const submitBtn = document.getElementById('campaignSubmitBtn');
+            
+            if (!confirm('Kampanya mesajı seçilen alıcılara 10 saniyelik güvenli bekleme aralıklarıyla gönderilecektir. Başlatmak istiyor musunuz?')) {
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Gönderiliyor...';
+
+            try {
+                const res = await fetch('/api/campaign/send', {
+                    method: 'POST',
+                    body: formData
+                });
+                const json = await res.json();
+                showAlert(json.message, json.status === 'ok');
+            } catch (err) {
+                showAlert('Kampanya başlatılırken hata oluştu: ' + err, false);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Kampanyayı Başlat (10sn Güvenli)';
+            }
+        }
+
         checkWaStatus();
+        loadCampaignPresets();
         setInterval(checkWaStatus, 15000);
     </script>
 </body>
