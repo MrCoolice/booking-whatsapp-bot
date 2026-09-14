@@ -44,6 +44,10 @@ def init_db():
         cur.execute("ALTER TABLE reservations ADD COLUMN notified_welcome INTEGER DEFAULT 0")
     except Exception:
         pass
+    try:
+        cur.execute("ALTER TABLE reservations ADD COLUMN notified_extension INTEGER DEFAULT 0")
+    except Exception:
+        pass
 
     cur.execute("""
         CREATE TABLE IF NOT EXISTS logs (
@@ -64,9 +68,21 @@ def init_db():
         "checkin_hour": "15:00",
         "checkout_hour": "11:00",
         "maps_url": "https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla",
+        "extension_enabled": "1",
+        "extension_time": "20:00",
+        "extension_price": "€75",
         "msg_new_booking": "🛎 *YENİ BOOKING REZERVASYONU DÜŞTÜ!*\n\n🏨 *Tesis:* {suite_name}\n📅 *Giriş Tarihi:* {checkin}\n🚪 *Çıkış Tarihi:* {checkout}\n\nDetaylar Booking Extranet panelinize eklendi.",
         "msg_checkin": "🏨 *BUGÜN GİRİŞ (CHECK-IN) GÜNÜ!*\n\n🏨 *Tesis:* {suite_name}\n📅 *Giriş:* Bugün ({checkin})\n🚪 *Çıkış:* {checkout}\n\n🔑 Oda hazırlığını ve anahtar teslimini yapınız.\n🚨 *DİKKAT:* KBS / Polis Sistemine misafir kimlik kaydını girmeyi unutmayınız!",
         "msg_checkout": "🧹 *BUGÜN CHECK-OUT (ÇIKIŞ) GÜNÜ!*\n\n🏨 *Tesis:* {suite_name}\n🚪 *Çıkış:* Bugün ({checkout})\n📅 *Giriş Tarihi:* {checkin}\n\n🧹 Oda temizlik hazırlıklarını başlatınız.\n🚨 *DİKKAT:* KBS / Polis Sisteminden misafir çıkışını vermeyi unutmayınız!",
+        "msg_extension": (
+            "Dear Guest,\n\n"
+            "I hope you are having a wonderful and comfortable stay at {suite_name}!\n\n"
+            "We just had a last-minute cancellation for tomorrow, {tomorrow_date}, which unexpectedly opened up the calendar for an extra night.\n\n"
+            "If you'd like to extend your stay and relax a bit longer without the rush of checking out, we would be delighted to offer you a special direct rate of {extension_price} (payable in cash, either in Euros or Turkish Liras).\n\n"
+            "If you are interested, just let us know today so we can reserve the night for you before it reopens to online platforms.\n\n"
+            "Best regards,\n"
+            "{suite_name}"
+        ),
         "msg_welcome": (
             "🏨 *Welcome to {suite_name}!* \n*(Dalaman Airport Suite'e Hoş Geldiniz!)*\n\n"
             "Dear Guest, we are delighted to host you. Here are your reservation & check-in details:\n"
@@ -255,6 +271,67 @@ def check_daily_reminders():
             
     conn.close()
 
+def check_extension_offers():
+    cfg = get_settings()
+    if cfg.get("extension_enabled", "1") != "1":
+        return
+        
+    suite_name = cfg.get("suite_name", "Dalaman Airport Suite 11")
+    ext_price = cfg.get("extension_price", "€75")
+    ext_tpl = cfg.get("msg_extension", "")
+    if not ext_tpl:
+        return
+        
+    now = datetime.datetime.now()
+    tomorrow_dt = now + datetime.timedelta(days=1)
+    tomorrow_str = tomorrow_dt.strftime("%Y%m%d")
+    tomorrow_fmt = tomorrow_dt.strftime("%d.%m.%Y")
+    
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    
+    # 1. Yarin odaya yeni giris var mi kontrol et (Oda yarin dolu mu?)
+    cur.execute("SELECT uid FROM reservations WHERE checkin = ?", (tomorrow_str,))
+    if cur.fetchone():
+        conn.close()
+        return
+        
+    # 2. Yarin cikis yapacak, numarasi girilmis ve henuz uzatma teklif edilmemis misafirleri bul
+    cur.execute("""
+        SELECT uid, checkin, checkout, guest_phone 
+        FROM reservations 
+        WHERE checkout = ? AND guest_phone != '' AND notified_extension = 0
+    """, (tomorrow_str,))
+    candidates = cur.fetchall()
+    
+    local_gateway_url = "http://127.0.0.1:3000/send"
+    for r in candidates:
+        uid, c_in, c_out, phone = r
+        clean_phone = (phone or "").strip()
+        if not clean_phone:
+            continue
+            
+        msg = (ext_tpl
+               .replace("{suite_name}", suite_name)
+               .replace("{tomorrow_date}", tomorrow_fmt)
+               .replace("{extension_price}", ext_price)
+               .replace("{checkin}", format_date_str(c_in))
+               .replace("{checkout}", format_date_str(c_out)))
+               
+        try:
+            r_post = requests.post(local_gateway_url, json={"phone": clean_phone, "message": msg}, timeout=15)
+            if r_post.status_code == 200:
+                cur.execute("UPDATE reservations SET notified_extension = 1 WHERE uid = ?", (uid,))
+                conn.commit()
+                add_log(f"Misafire 1 gece uzatma teklifi iletildi -> {clean_phone} ({tomorrow_fmt} - {ext_price})", "success")
+            else:
+                add_log(f"Uzatma teklifi iletilemedi ({clean_phone}): {r_post.text}", "error")
+        except Exception as e:
+            add_log(f"Uzatma teklifi baglanti hatasi ({clean_phone}): {str(e)}", "error")
+        time.sleep(1.5)
+        
+    conn.close()
+
 scheduler = BackgroundScheduler()
 
 def scheduled_job():
@@ -265,8 +342,8 @@ def scheduled_job():
     sync_calendar()
     
     # Sabah saati geldiyse veya gecildiyse henuz iletilmemis gunluk hatirlatmalari gonder
+    now = datetime.datetime.now()
     try:
-        now = datetime.datetime.now()
         parts = morning_time.split(":")
         m_hour = int(parts[0])
         m_minute = int(parts[1]) if len(parts) > 1 else 0
@@ -276,6 +353,18 @@ def scheduled_job():
     except Exception:
         if current_hm >= morning_time:
             check_daily_reminders()
+            
+    # Aksam uzatma teklifi kontrolu (varsayilan 20:00)
+    try:
+        ext_time = cfg.get("extension_time", "20:00")
+        e_parts = ext_time.split(":")
+        e_hour = int(e_parts[0])
+        e_minute = int(e_parts[1]) if len(e_parts) > 1 else 0
+        ext_dt = now.replace(hour=e_hour, minute=e_minute, second=0, microsecond=0)
+        if now >= ext_dt:
+            check_extension_offers()
+    except Exception:
+        pass
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -304,12 +393,12 @@ async def index(request: Request):
     cur.execute("SELECT uid, checkin, checkout, notified_checkin, guest_phone, notified_welcome FROM reservations WHERE checkin = ?", (today_str,))
     today_checkins = [{"uid": r[0], "checkin": format_date_str(r[1]), "checkout": format_date_str(r[2]), "notified": r[3], "guest_phone": r[4] or "", "notified_welcome": r[5]} for r in cur.fetchall()]
     
-    cur.execute("SELECT uid, checkin, checkout, created_at, notified_checkout, guest_phone, notified_welcome FROM reservations ORDER BY checkin DESC LIMIT 50")
+    cur.execute("SELECT uid, checkin, checkout, created_at, notified_checkout, guest_phone, notified_welcome, notified_extension FROM reservations ORDER BY checkin DESC LIMIT 50")
     all_res = []
     current_hour = datetime.datetime.now().hour
     
     for r in cur.fetchall():
-        uid, c_in, c_out, created_at, notif_out, guest_phone, notif_welcome = r
+        uid, c_in, c_out, created_at, notif_out, guest_phone, notif_welcome, notif_ext = r
         
         if today_str > c_out:
             status = "Çıkış Yaptı"
@@ -334,6 +423,7 @@ async def index(request: Request):
             "status": status,
             "guest_phone": guest_phone or "",
             "notified_welcome": notif_welcome,
+            "notified_extension": notif_ext,
             "created_at": created_at
         })
         
@@ -363,10 +453,14 @@ async def save_settings(
     checkin_hour: str = Form("15:00"),
     checkout_hour: str = Form("11:00"),
     maps_url: str = Form("https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla"),
+    extension_enabled: str = Form("1"),
+    extension_time: str = Form("20:00"),
+    extension_price: str = Form("€75"),
     msg_new_booking: str = Form(...),
     msg_checkin: str = Form(...),
     msg_checkout: str = Form(...),
-    msg_welcome: str = Form(...)
+    msg_welcome: str = Form(...),
+    msg_extension: str = Form(...)
 ):
     update_setting("suite_name", suite_name.strip())
     update_setting("phone_numbers", phone_numbers.strip())
@@ -377,12 +471,66 @@ async def save_settings(
     update_setting("checkin_hour", checkin_hour.strip())
     update_setting("checkout_hour", checkout_hour.strip())
     update_setting("maps_url", maps_url.strip())
+    update_setting("extension_enabled", extension_enabled.strip())
+    update_setting("extension_time", extension_time.strip())
+    update_setting("extension_price", extension_price.strip())
     update_setting("msg_new_booking", msg_new_booking.strip())
     update_setting("msg_checkin", msg_checkin.strip())
     update_setting("msg_checkout", msg_checkout.strip())
     update_setting("msg_welcome", msg_welcome.strip())
+    update_setting("msg_extension", msg_extension.strip())
     add_log("Ayarlar ve mesaj şablonları güncellendi.", "info")
     return JSONResponse({"status": "ok", "message": "Tüm ayarlar ve özel mesaj şablonları başarıyla kaydedildi!"})
+
+@app.post("/api/reservation/send-extension")
+async def send_extension_offer(uid: str = Form(...)):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT uid, checkin, checkout, guest_phone, suite_name FROM reservations WHERE uid = ?", (uid,))
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        return JSONResponse({"status": "error", "message": "Rezervasyon bulunamadı."})
+        
+    uid_res, c_in, c_out, phone, r_suite = row
+    clean_phone = (phone or "").strip()
+    if not clean_phone:
+        conn.close()
+        return JSONResponse({"status": "error", "message": "Lütfen önce misafirin telefon numarasını girip kaydediniz."})
+        
+    cfg = get_settings()
+    suite_name = cfg.get("suite_name", r_suite or "Dalaman Airport Suite 11")
+    ext_price = cfg.get("extension_price", "€75")
+    ext_tpl = cfg.get("msg_extension", "")
+    
+    try:
+        c_out_dt = datetime.datetime.strptime(c_out, "%Y%m%d")
+        tomorrow_fmt = c_out_dt.strftime("%d.%m.%Y")
+    except Exception:
+        tomorrow_fmt = format_date_str(c_out)
+        
+    msg = (ext_tpl
+           .replace("{suite_name}", suite_name)
+           .replace("{tomorrow_date}", tomorrow_fmt)
+           .replace("{extension_price}", ext_price)
+           .replace("{checkin}", format_date_str(c_in))
+           .replace("{checkout}", format_date_str(c_out)))
+           
+    local_gateway_url = "http://127.0.0.1:3000/send"
+    try:
+        r_post = requests.post(local_gateway_url, json={"phone": clean_phone, "message": msg}, timeout=15)
+        if r_post.status_code == 200:
+            cur.execute("UPDATE reservations SET notified_extension = 1 WHERE uid = ?", (uid,))
+            conn.commit()
+            conn.close()
+            add_log(f"Misafire manuel uzatma teklifi iletildi -> {clean_phone} ({tomorrow_fmt} - {ext_price})", "success")
+            return JSONResponse({"status": "ok", "message": f"1 Gece uzatma teklifi ({clean_phone}) numarasına başarıyla iletildi!"})
+        else:
+            conn.close()
+            return JSONResponse({"status": "error", "message": f"Mesaj iletilemedi: {r_post.text}"})
+    except Exception as e:
+        conn.close()
+        return JSONResponse({"status": "error", "message": f"Bağlantı hatası: {str(e)}"})
 
 @app.post("/api/reservation/send-welcome")
 async def send_welcome_message(uid: str = Form(...), phone: str = Form(...)):

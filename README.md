@@ -49,6 +49,7 @@ The web dashboard (`http://<SERVER-IP>:8000`) provides real-time control and vis
   - Morning Check-in alert (`09:00` by default): Reminds staff of key handover and mandatory police guest registration.
   - Morning Check-out alert: Reminds staff to start housekeeping and file the police check-out notification.
 - 🛡️ **Fail-Safe & Self-Healing Reminder Scheduler:** Evaluates pending daily reminders against database state (`>= morning_time`). Even if the container reboots or the 2-minute polling interval drifts past 09:00, morning check-in/out messages are guaranteed to dispatch without being skipped!
+- 🎁 **Smart Last-Minute Stay Extension (Upsell) Automation:** If tomorrow is open in the calendar (no incoming guest), the bot automatically sends an evening (`20:00`) personalized WhatsApp extension offer to departing guests at a direct discounted rate (e.g. `€75`), turning empty nights into commission-free cash revenue!
 - 🔑 **Guest Welcome & Self Check-in Dispatcher:**
   - One-click personalized bilingual (English & Turkish) WhatsApp message to incoming guests containing Wi-Fi credentials, check-in (`15:00`) / check-out (`11:00`) hours, and Google Maps pin.
 - 🌐 **Modern & Responsive Web Dashboard:** Accessible at `http://<IP>:8000`, built with Tailwind CSS, showing today's arrivals, departures, live logs, active reservations, and an interactive WhatsApp QR pairing modal.
@@ -218,6 +219,7 @@ Tarayıcınızdan `http://<SUNUCU-IP>:8000` adresine girdiğinizde sizi karşıl
   - Her sabah belirlediğiniz saatte (örn. `09:00`) o günkü girişler için kimlik bildirimi uyarısı.
   - O günkü çıkışlar için oda temizlik hazırlığı ve KBS çıkış bildirimi uyarısı.
 - 🛡️ **Sıfır Mesaj Kaçırma Garantili Akıllı Zamanlayıcı:** Sabah hatırlatıcıları (`09:00`), veritabanı durumuyla entegre `>= morning_time` algoritmasıyla yönetilir. Sunucu saat 09:00'da kapalı olsa veya döngü dakikayı atlasa bile, sistem açıldığı ilk anda günün atılmamış Check-in / Check-out mesajlarını otomatik tespit edip anında iletir.
+- 🎁 **Akıllı Son Dakika Konaklama Uzatma (Upsell) Otomasyonu:** Ertesi gün takvimde oda boşsa (yeni giriş yoksa), bot akşam saat 20:00'de yarın çıkacak misafire indirimli nakit uzatma teklifi (`€75`) içeren WhatsApp mesajını otomatik iletir. Boş geceleri komisyonsuz doğrudan nakit gelire dönüştürür.
 - 🔑 **Misafir Karşılama (Self Check-in & Wi-Fi) Otomasyonu:**
   - Giriş yapacak misafirlere tek tıkla Wi-Fi şifresi, giriş (`15:00`) ve çıkış (`11:00`) saatleri ile Google Haritalar konumunu içeren çift dilli (Türkçe & İngilizce) karşılama mesajı gönderme.
 - 🌐 **Modern & Responsive Web Paneli:** `http://<IP>:8000` adresinden erişilebilen, Tailwind CSS ile tasarlanmış yönetim arayüzü ve entegre WhatsApp QR eşleme penceresi.
@@ -407,6 +409,9 @@ Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır. Dilediğiniz gibi geli�
 
 ## 📝 Sürüm Notları / Changelog
 
+- **v1.3.0 (14 Eylül 2026):**
+  - **Akıllı Konaklama Uzatma (Stay Extension Upsell):** Takvimde ertesi gün boş olduğunda yarın çıkacak misafire akşam saat 20:00'de otomatik veya paneldeki `[🎁 Uzat]` butonuyla tek tıkla WhatsApp üzerinden indirimli uzatma teklifi iletme özelliği eklendi.
+  - **Dinamik Fiyat & Saat Ayarları:** Web panelinden uzatma teklif fiyatı (`€75`), teklif saati (`20:00`) ve özel İngilizce/Türkçe şablon düzenlenebilir hale getirildi.
 - **v1.2.2 (14 Eylül 2026):**
   - **Manuel Rezervasyon Bildirimi Testi:** Web paneline ve rezervasyon tablosundaki her satıra "Rezervasyon Bildirimi Testi" ve `[🔔 Bildir]` butonları eklendi.
   - **Uçtan Uca Şifreleme (E2EE) İyileştirmesi:** "Mesaj bekleniyor" gecikmesini önlemek için Baileys `getMessage` retry önbelleği ve çoklu alıcılar arasına 1.5 saniyelik güvenlik aralığı (throttling) eklendi.
