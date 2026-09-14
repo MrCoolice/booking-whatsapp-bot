@@ -99,33 +99,39 @@ def init_db():
             "🚪 *Check-out Time:* {checkout_hour} *(Çıkış saati: {checkout_hour})*\n"
             "📶 *Wi-Fi:* {wifi_name}\n"
             "🔐 *Wi-Fi Password:* {wifi_password}\n\n"
-            "🎁 *SPECIAL GIFT / ÖZEL İNDİRİM HEDİYESİ:*\n"
-            "Reply to this message with *\"YES\"* or *\"EVET\"* to confirm your contact and instantly unlock a *%7.5 DISCOUNT* on your extra nights, stay extension, or next direct booking!\n"
-            "*(Bu mesaja \"EVET\" veya \"YES\" yazarak yanıt verin, konaklama uzatmanızda veya bir sonraki rezervasyonunuzda geçerli %7.5 ANINDA İNDİRİM kazanın!)*\n\n"
+            "🎁 *EXCLUSIVE GIFT / DOĞRUDAN REZERVASYONDA %10 İNDİRİM:*\n"
+            "Reply to this message with *\"YES\"* or *\"EVET\"* to activate your *%10 DIRECT BOOKING DISCOUNT* for your next stay or stay extensions via our website (dalamanairportsuites.com)!\n"
+            "*(Bu mesaja \"EVET\" veya \"YES\" yazarak yanıt verin, web sitemiz veya WhatsApp üzerinden yapacağınız bir sonraki rezervasyonunuzda geçerli %10 DOĞRUDAN İNDİRİM kuponunuzu anında alın!)*\n\n"
             "🚗 *Location:* Only 10 mins from Dalaman International Airport (DLM).\n"
-            "📞 If you need anything, please contact us on WhatsApp: +90 542 367 45 99.\n\n"
+            "📞 WhatsApp Direct: +90 542 367 45 99\n"
+            "🌐 Website: https://dalamanairportsuites.com\n\n"
             "✨ *We wish you a wonderful and relaxing stay!*\n*(Keyifli bir konaklama dileriz!)*"
         ),
         "msg_discount_confirmed": (
             "🎉 *Congratulations! / Tebrikler!* 🌴\n\n"
-            "Your *%7.5 DISCOUNT* promo code has been activated:\n"
-            "🏷 *PROMO CODE: DAS75*\n\n"
-            "You can use this code for:\n"
-            "✅ Extending your current stay (extra nights)\n"
-            "✅ Your next direct booking with Dalaman Airport Suite (Save platform commission + %7.5 off)\n\n"
-            "Simply message us on WhatsApp when booking!\n"
-            "*(Konaklama uzatmanızda veya bir sonraki doğrudan rezervasyonunuzda bu kodu WhatsApp'tan bize iletmeniz yeterlidir.)*\n\n"
+            "Your *%10 DIRECT DISCOUNT* promo code has been activated:\n"
+            "🏷 *PROMO CODE: DAS10*\n\n"
+            "How to redeem your %10 discount:\n"
+            "✅ Visit our website: https://dalamanairportsuites.com\n"
+            "✅ Click the WhatsApp button or message us directly here with code *DAS10*\n"
+            "✅ Save 100% on platform booking fees + get %10 instant discount!\n\n"
+            "*(Web sitemizdeki WhatsApp butonuna tıklayarak veya doğrudan buradan bize 'DAS10' kodunu ileterek %10 indirimli, komisyonsuz doğrudan rezervasyonunuzu yapabilirsiniz.)*\n\n"
             "Wishing you a fantastic stay!"
         )
     }
     for k, v in defaults.items():
         cur.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", (k, v))
         
-    # Auto-upgrade welcome template if existing template does not have %7.5 hook
+    # Auto-upgrade welcome template if existing template has %7.5
     cur.execute("SELECT value FROM settings WHERE key = 'msg_welcome'")
     curr_welcome = cur.fetchone()
-    if curr_welcome and "%7.5" not in curr_welcome[0]:
+    if curr_welcome and ("%7.5" in curr_welcome[0] or "%10" not in curr_welcome[0]):
         cur.execute("UPDATE settings SET value = ? WHERE key = 'msg_welcome'", (defaults["msg_welcome"],))
+        
+    cur.execute("SELECT value FROM settings WHERE key = 'msg_discount_confirmed'")
+    curr_disc = cur.fetchone()
+    if curr_disc and ("DAS75" in curr_disc[0] or "DAS10" not in curr_disc[0]):
+        cur.execute("UPDATE settings SET value = ? WHERE key = 'msg_discount_confirmed'", (defaults["msg_discount_confirmed"],))
         
     conn.commit()
     conn.close()
@@ -744,10 +750,11 @@ async def whatsapp_inbound_webhook(request: Request):
     
     add_log(f"Misafir WhatsApp yanıtı alındı (+{clean_phone}): {text}", "info")
     
-    # 1. EVET / YES ve İndirim Kontrolü (Opt-in Hook)
+    # 1. EVET / YES, DAS10 ve Web Sitesi İndirim Kontrolü (Opt-in Hook)
+    is_website_lead = bool(re.search(r"\b(das10|dalamanairportsuites|sitenizden|web|site)\b", normalized, re.IGNORECASE))
     is_affirmative = bool(
         re.search(r"^(evet|yes|kabul|sure|ok|tamam|istiyorum|yaparız|yapariz|indirim)\b", normalized, re.IGNORECASE) or 
-        re.search(r"\b(evet|yes|das75)\b", normalized, re.IGNORECASE)
+        re.search(r"\b(evet|yes|das10|das75)\b", normalized, re.IGNORECASE)
     )
     is_extension_reply = bool(re.search(r"\b(uzat|extend|stay|gece|night|ekstra)\b", normalized, re.IGNORECASE))
     
@@ -761,38 +768,54 @@ async def whatsapp_inbound_webhook(request: Request):
     cur.execute("SELECT uid, checkin, checkout, guest_phone, has_discount FROM reservations WHERE guest_phone LIKE ? ORDER BY checkin DESC LIMIT 1", (f"%{last_9}%",))
     res_row = cur.fetchone()
     
-    if is_affirmative:
+    if is_website_lead:
         if res_row:
             uid, c_in, c_out, g_phone, has_disc = res_row
-            cur.execute("UPDATE reservations SET has_discount = 1, discount_code = 'DAS75' WHERE uid = ?", (uid,))
+            cur.execute("UPDATE reservations SET has_discount = 1, discount_code = 'DAS10' WHERE uid = ?", (uid,))
             conn.commit()
             
-        # Misafire %7.5 indirim promosyon mesajını ilet
+        host_alert = (
+            f"🎉 *MİSAFİR WEB SİTESİNDEN %10 İNDİRİMLİ (DAS10) İLE YAZDI!*\n\n"
+            f"📱 *Misafir:* +{clean_phone}\n"
+            f"💬 *Mesaj:* \"{text}\"\n"
+            f"🏷 *Kupon:* DAS10 (%10 Doğrudan İndirim)\n\n"
+            f"Misafir dalamanairportsuites.com sitenizdeki WhatsApp butonundan %10 indirimle talepte bulundu. Komisyonsuz doğrudan rezervasyon fırsatı!"
+        )
+        send_whatsapp(host_alert)
+        add_log(f"Web sitesinden doğrudan rezervasyon talebi alındı (DAS10) -> +{clean_phone}", "success")
+        
+    elif is_affirmative:
+        if res_row:
+            uid, c_in, c_out, g_phone, has_disc = res_row
+            cur.execute("UPDATE reservations SET has_discount = 1, discount_code = 'DAS10' WHERE uid = ?", (uid,))
+            conn.commit()
+            
+        # Misafire %10 indirim promosyon mesajını ilet
         disc_msg = cfg.get("msg_discount_confirmed", (
             "🎉 *Congratulations! / Tebrikler!* 🌴\n\n"
-            "Your *%7.5 DISCOUNT* promo code has been activated:\n"
-            "🏷 *PROMO CODE: DAS75*\n\n"
-            "You can use this code for:\n"
-            "✅ Extending your current stay (extra nights)\n"
-            "✅ Your next direct booking with Dalaman Airport Suite (Save platform commission + %7.5 off)\n\n"
-            "Simply message us on WhatsApp when booking!\n"
-            "*(Konaklama uzatmanızda veya bir sonraki doğrudan rezervasyonunuzda bu kodu WhatsApp'tan bize iletmeniz yeterlidir.)*\n\n"
+            "Your *%10 DIRECT DISCOUNT* promo code has been activated:\n"
+            "🏷 *PROMO CODE: DAS10*\n\n"
+            "How to redeem your %10 discount:\n"
+            "✅ Visit our website: https://dalamanairportsuites.com\n"
+            "✅ Click the WhatsApp button or message us directly here with code *DAS10*\n"
+            "✅ Save 100% on platform booking fees + get %10 instant discount!\n\n"
+            "*(Web sitemizdeki WhatsApp butonuna tıklayarak veya doğrudan buradan bize 'DAS10' kodunu ileterek %10 indirimli, komisyonsuz doğrudan rezervasyonunuzu yapabilirsiniz.)*\n\n"
             "Wishing you a fantastic stay!"
         )).replace("{suite_name}", suite_name)
         
         try:
             requests.post("http://127.0.0.1:3000/send", json={"phone": raw_phone, "message": disc_msg}, timeout=10)
-            add_log(f"Misafire %7.5 İndirim Onayı (DAS75) WhatsApp'tan iletildi -> +{clean_phone}", "success")
+            add_log(f"Misafire %10 Web İndirim Onayı (DAS10) WhatsApp'tan iletildi -> +{clean_phone}", "success")
         except Exception as e:
             add_log(f"İndirim onay mesajı iletilemedi (+{clean_phone}): {str(e)}", "error")
             
         # Yöneticiye anında WhatsApp alarmı gönder
         host_alert = (
-            f"🎁 *MİSAFİR 'EVET' DEDİ & %7.5 İNDİRİM KAZANDI!*\n\n"
+            f"🎁 *MİSAFİR 'EVET' DEDİ & %10 WEB İNDİRİMİ KAZANDI!*\n\n"
             f"📱 *Misafir:* +{clean_phone}\n"
             f"💬 *Mesaj:* \"{text}\"\n"
-            f"🏷 *Kupon:* DAS75 (%7.5 İndirim Aktif)\n\n"
-            f"Misafir doğrudan iletişim ve indirim onayını verdi. Web panelinde %7.5 indirim rozeti güncellendi."
+            f"🏷 *Kupon:* DAS10 (%10 Web İndirimi Aktif)\n\n"
+            f"Misafir doğrudan iletişim ve %10 indirim onayını verdi. Web panelinde %10 indirim rozeti güncellendi."
         )
         send_whatsapp(host_alert)
         

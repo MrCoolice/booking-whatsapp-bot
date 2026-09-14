@@ -262,8 +262,8 @@
                                         </div>
                                         {% if r.has_discount %}
                                         <div>
-                                            <span class="bg-amber-50 text-amber-900 border border-amber-300 text-[10px] px-2 py-0.5 rounded-md font-bold inline-flex items-center gap-1 shadow-xs" title="Misafir 'EVET' yanıtı verdi (%7.5 İndirimli DAS75)">
-                                                <i class="fa-solid fa-tag text-amber-600"></i> %7.5 İndirim Aktif
+                                            <span class="bg-emerald-50 text-emerald-900 border border-emerald-300 text-[10px] px-2 py-0.5 rounded-md font-bold inline-flex items-center gap-1 shadow-xs" title="Misafir 'EVET' yanıtı verdi (%10 Web İndirimi DAS10)">
+                                                <i class="fa-solid fa-tag text-emerald-600"></i> %10 Web İndirimi (DAS10)
                                             </span>
                                         </div>
                                         {% endif %}
@@ -361,6 +361,38 @@
                             </button>
                         </div>
                     </form>
+                </div>
+
+                <!-- WordPress Web Sitesi WhatsApp Buton Entegrasyonu & Takip Rehberi -->
+                <div class="bg-white rounded-2xl p-6 border border-emerald-200 shadow-sm space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="bg-emerald-100 text-emerald-700 p-2 rounded-xl">
+                                <i class="fa-brands fa-wordpress text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">WordPress Web Sitesi WhatsApp Buton Takip Linki</h3>
+                                <p class="text-xs text-slate-500">dalamanairportsuites.com sitenizdeki butona bu linki koyun, bot gelen her rezervasyonu otomatik tanısın!</p>
+                            </div>
+                        </div>
+                        <span class="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded-lg">
+                            %10 Kupon: DAS10
+                        </span>
+                    </div>
+
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
+                        <p class="text-xs text-slate-700 font-medium leading-relaxed">
+                            📌 <b>Nasıl Çalışır?</b> Sitenizdeki WhatsApp butonunun link adresini aşağıdaki gibi yaptığınızda, misafir butona bastığı anda WhatsApp mesaj kutusunda otomatik olarak bu metin hazır gelir. Misafir gönderdiğinde botumuz bunu yakalar ve size <b>"🎉 Web Sitesinden %10 İndirimli Rezervasyon Talebi Geldi!"</b> alarmı verir.
+                        </p>
+                        <div class="flex items-center gap-2">
+                            <input type="text" readonly id="wpWaLinkInput" 
+                                   value="https://wa.me/905423674599?text=Merhaba,%20dalamanairportsuites.com%20üzerinden%20%2510%20indirimli%20(DAS10)%20rezervasyon%20yaptırmak%20istiyorum." 
+                                   class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-800 outline-none focus:ring-1 focus:ring-emerald-500 select-all">
+                            <button type="button" onclick="copyWpWaLink()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1 shrink-0 transition cursor-pointer">
+                                <i class="fa-regular fa-copy"></i> Kopyala
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Canlı Sistem Olay Günlüğü (Rezervasyonların Altında) -->
@@ -501,8 +533,8 @@
                         </div>
 
                         <div>
-                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">🎉 Misafir "EVET/YES" Yazınca Gidecek %7.5 İndirim Onayı (Kupon: DAS75)</label>
-                            <textarea name="msg_discount_confirmed" rows="4" class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 font-sans">{{ config.msg_discount_confirmed or "🎉 *Congratulations! / Tebrikler!*\n\nYour *%7.5 DISCOUNT* promo code has been activated:\n🏷 *PROMO CODE: DAS75*\n\nYou can use this code for:\n✅ Extending your current stay (extra nights)\n✅ Your next direct booking with Dalaman Airport Suite (Save platform commission + %7.5 off)\n\nSimply message us on WhatsApp when booking!\n\nWishing you a fantastic stay! 🌴" }}</textarea>
+                            <label class="block text-[11px] font-semibold text-slate-700 mb-1">🎉 Misafir "EVET/YES" Yazınca Gidecek %10 Web İndirimi Onayı (Kupon: DAS10)</label>
+                            <textarea name="msg_discount_confirmed" rows="4" class="w-full px-3 py-1.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 font-sans">{{ config.msg_discount_confirmed or "🎉 *Congratulations! / Tebrikler!*\n\nYour *%10 DIRECT DISCOUNT* promo code has been activated:\n🏷 *PROMO CODE: DAS10*\n\nHow to redeem your %10 discount:\n✅ Visit our website: https://dalamanairportsuites.com\n✅ Click the WhatsApp button or message us directly here with code *DAS10*\n✅ Save 100% on platform booking fees + get %10 instant discount!\n\n*(Web sitemizdeki WhatsApp butonuna tıklayarak veya doğrudan buradan bize 'DAS10' kodunu ileterek %10 indirimli, komisyonsuz doğrudan rezervasyonunuzu yapabilirsiniz.)*\n\nWishing you a fantastic stay!" }}</textarea>
                         </div>
 
                         <div>
@@ -828,6 +860,13 @@
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Kampanyayı Başlat (10sn Güvenli)';
             }
+        }
+
+        function copyWpWaLink() {
+            const input = document.getElementById('wpWaLinkInput');
+            input.select();
+            navigator.clipboard.writeText(input.value);
+            showAlert('WhatsApp buton takip linki kopyalandı! WordPress sitenizdeki butona yapıştırabilirsiniz.', true);
         }
 
         checkWaStatus();
