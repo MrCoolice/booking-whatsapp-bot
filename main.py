@@ -49,7 +49,8 @@ def init_db():
         ("has_discount", "INTEGER DEFAULT 0"),
         ("discount_code", "TEXT DEFAULT ''"),
         ("booker_country", "TEXT DEFAULT ''"),
-        ("language", "TEXT DEFAULT 'en'")
+        ("language", "TEXT DEFAULT 'en'"),
+        ("notified_review", "INTEGER DEFAULT 0")
     ]:
         try:
             cur.execute(f"ALTER TABLE reservations ADD COLUMN {col} {col_type}")
@@ -77,6 +78,15 @@ def init_db():
         )
     """)
     
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS opt_outs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            phone TEXT UNIQUE,
+            timestamp TEXT,
+            reason TEXT
+        )
+    """)
+    
     defaults = {
         "sandbox_mode": "1", # 1: Güvenli Test Modu Açık, 0: Canlı Mod
         "test_phone": "+905423674599",
@@ -94,6 +104,18 @@ def init_db():
         "extension_enabled": "1",
         "extension_time": "20:00",
         "extension_price": "€75",
+        "review_auto_send": "1", # 1: Çıkış günü otomatik Google & Booking yorum mesajı gönder, 0: Kapalı
+        "review_auto_time": "12:30",
+        "google_review_url": "https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla",
+        "msg_review": (
+            "🌟 *Thank You for Staying With Us! / Bizi Tercih Ettiğiniz İçin Teşekkür Ederiz!* 🌴\n\n"
+            "Dear Guest,\n"
+            "We hope you had a relaxing stay at {suite_name}. We truly enjoyed hosting you!\n\n"
+            "As a small family-run suite, guest reviews help us grow and support future travelers:\n"
+            "⭐ *Google 5-Star Review:* {google_review_url}\n"
+            "🛎 *Booking.com 10/10 Rating:* If you booked via Booking.com, please check the review email from Booking and rate us 10/10!\n\n"
+            "Safe travels and we hope to welcome you back to Dalaman soon! ☀️"
+        ),
         "msg_new_booking": "🛎 *YENİ BOOKING REZERVASYONU DÜŞTÜ!*\n\n🏨 *Tesis:* {suite_name}\n📅 *Giriş Tarihi:* {checkin}\n🚪 *Çıkış Tarihi:* {checkout}\n\nDetaylar Booking Extranet panelinize eklendi.",
         "msg_checkin": "🏨 *BUGÜN GİRİŞ (CHECK-IN) GÜNÜ!*\n\n🏨 *Tesis:* {suite_name}\n📅 *Giriş:* Bugün ({checkin})\n🚪 *Çıkış:* {checkout}\n\n🔑 Oda hazırlığını ve anahtar teslimini yapınız.\n🚨 *DİKKAT:* KBS / Polis Sistemine misafir kimlik kaydını girmeyi unutmayınız!",
         "msg_checkout": "🧹 *BUGÜN CHECK-OUT (ÇIKIŞ) GÜNÜ!*\n\n🏨 *Tesis:* {suite_name}\n🚪 *Çıkış:* Bugün ({checkout})\n📅 *Giriş Tarihi:* {checkin}\n\n🧹 Oda temizlik hazırlıklarını başlatınız.\n🚨 *DİKKAT:* KBS / Polis Sisteminden misafir çıkışını vermeyi unutmayınız!",
@@ -409,6 +431,48 @@ def get_multilingual_discount_confirmed(lang: str, params: dict) -> str:
             "Wishing you a fantastic stay!"
         ).format(**params)
 
+def get_multilingual_review(lang: str, params: dict) -> str:
+    if lang == "de":
+        return (
+            "🌟 *Vielen Dank für Ihren Aufenthalt in der {suite_name}!* 🌴\n\n"
+            "Lieber Gast,\n"
+            "wir hoffen, Sie hatten eine wunderbare und erholsame Zeit bei uns. Es war uns eine echte Freude, Sie als Gast begrüßen zu dürfen!\n\n"
+            "Als kleines Familienunternehmen bedeutet uns Ihr ehrliches Feedback unglaublich viel:\n\n"
+            "⭐ *Google 5-Sterne-Bewertung:* {google_review_url}\n"
+            "🛎 *Booking.com 10/10 Bewertung:* Falls Sie über Booking.com gebucht haben, freuen wir uns riesig über 10/10 Punkte in der Bewertungs-E-Mail von Booking!\n\n"
+            "Wir wünschen Ihnen eine gute Heimreise und hoffen, Sie bald wieder in Dalaman begrüßen zu dürfen! ☀️"
+        ).format(**params)
+    elif lang == "ru":
+        return (
+            "🌟 *Спасибо за выбор {suite_name}!* 🌴\n\n"
+            "Уважаемый гость,\n"
+            "Надеемся, ваш отдых прошел прекрасно и оставил только приятные впечатления. Нам было очень приятно принимать вас!\n\n"
+            "Для наших небольших семейных апартаментов отзывы гостей невероятно ценны:\n\n"
+            "⭐ *Google Отзыв (5 звезд):* {google_review_url}\n"
+            "🛎 *Booking.com Оценка 10/10:* Если вы бронировали через Booking.com, пожалуйста, поддержите нас оценкой 10/10 в письме с опросом от Booking!\n\n"
+            "Счастливого пути и всегда ждем вас снова в Даламане! ☀️"
+        ).format(**params)
+    elif lang == "tr":
+        return (
+            "🌟 *{suite_name} Tesisimizi Tercih Ettiğiniz İçin Teşekkür Ederiz!* 🌴\n\n"
+            "Değerli Misafirimiz,\n"
+            "Tesisimizde keyifli, huzurlu ve konforlu bir konaklama geçirdiğinizi umuyoruz. Sizi ağırlamaktan büyük mutluluk duyduk!\n\n"
+            "Butik bir aile işletmesi olarak misafirlerimizin samimi değerlendirmeleri bizim için çok kıymetli:\n\n"
+            "⭐ *Google Haritalar 5 Yıldız:* {google_review_url}\n"
+            "🛎 *Booking.com 10/10 Puan:* Eğer Booking.com üzerinden rezervasyon yaptıysanız, e-postanıza gelen ankette bize 10/10 tam puan vererek destek olabilirsiniz!\n\n"
+            "Hayırlı ve güvenli yolculuklar diler, Dalaman'a yolunuz düştüğünde sizi tekrar ağırlamaktan onur duyarız! ☀️"
+        ).format(**params)
+    else: # en
+        return (
+            "🌟 *Thank You for Staying at {suite_name}!* 🌴\n\n"
+            "Dear Guest,\n"
+            "We hope you had a relaxing and wonderful stay with us. It was a true pleasure hosting you!\n\n"
+            "As a small boutique family-run suite, honest guest reviews mean everything to us and help future travelers discover us:\n\n"
+            "⭐ *Google 5-Star Review:* {google_review_url}\n"
+            "🛎 *Booking.com 10/10 Rating:* If you booked via Booking.com, please check the review email from Booking and rate us 10/10!\n\n"
+            "Safe travels on your journey home, and we look forward to welcoming you back to Dalaman soon! ☀️"
+        ).format(**params)
+
 def send_to_guest_or_sandbox(guest_phone: str, message: str, guest_lang: str = "en", guest_country: str = "") -> dict:
     cfg = get_settings()
     sandbox_mode = cfg.get("sandbox_mode", "1") == "1"
@@ -675,6 +739,65 @@ def check_automatic_welcomes():
         
     conn.close()
 
+def check_automatic_reviews():
+    cfg = get_settings()
+    if cfg.get("review_auto_send", "1") != "1":
+        return
+        
+    now = datetime.datetime.now()
+    review_time = cfg.get("review_auto_time", "12:30")
+    try:
+        r_parts = review_time.split(":")
+        r_hour = int(r_parts[0])
+        r_minute = int(r_parts[1]) if len(r_parts) > 1 else 0
+        review_dt = now.replace(hour=r_hour, minute=r_minute, second=0, microsecond=0)
+        if now < review_dt:
+            return
+    except Exception:
+        pass
+        
+    today_str = now.strftime("%Y%m%d")
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    
+    # Bugün çıkış yapan, telefonu olan ve henüz yorum mesajı gönderilmemiş misafirler
+    cur.execute("""
+        SELECT uid, checkin, checkout, guest_phone, suite_name, booker_country, language
+        FROM reservations
+        WHERE checkout = ? AND guest_phone != '' AND guest_phone IS NOT NULL AND (notified_review = 0 OR notified_review IS NULL)
+    """, (today_str,))
+    candidates = cur.fetchall()
+    
+    if not candidates:
+        conn.close()
+        return
+        
+    suite_name = cfg.get("suite_name", "Dalaman Airport Suite 11")
+    google_review_url = cfg.get("google_review_url", "https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla")
+    
+    for r in candidates:
+        uid, c_in_raw, c_out_raw, phone, r_suite, booker_country, guest_lang = r
+        clean_phone = (phone or "").strip()
+        if not clean_phone:
+            continue
+            
+        lang = guest_lang or detect_guest_language(clean_phone, booker_country)
+        params = {
+            "suite_name": suite_name,
+            "google_review_url": google_review_url
+        }
+        
+        msg = get_multilingual_review(lang, params)
+        res = send_to_guest_or_sandbox(clean_phone, msg, lang, booker_country)
+        
+        if res.get("success"):
+            cur.execute("UPDATE reservations SET notified_review = 1 WHERE uid = ?", (uid,))
+            conn.commit()
+            add_log(f"Çıkış yapan misafire otomatik Google & Booking yorum ricası iletildi ({lang.upper()}) -> {clean_phone}", "success")
+        time.sleep(2)
+        
+    conn.close()
+
 scheduler = BackgroundScheduler()
 
 def scheduled_job():
@@ -697,6 +820,18 @@ def scheduled_job():
         if current_hm >= morning_time:
             check_daily_reminders()
             
+    # Saat 12:30: Bugun cikis yapan misafirlere Google & Booking.com yorum ricasi gonder
+    try:
+        r_time = cfg.get("review_auto_time", "12:30")
+        r_parts = r_time.split(":")
+        r_hour = int(r_parts[0])
+        r_minute = int(r_parts[1]) if len(r_parts) > 1 else 0
+        review_dt = now.replace(hour=r_hour, minute=r_minute, second=0, microsecond=0)
+        if now >= review_dt:
+            check_automatic_reviews()
+    except Exception:
+        pass
+
     # Saat 15:00: Bugun giris yapacak misafirlere kendi dilinde karsilama gonder
     try:
         w_time = cfg.get("welcome_auto_time", "15:00")
@@ -748,12 +883,12 @@ async def index(request: Request):
     cur.execute("SELECT uid, checkin, checkout, notified_checkin, guest_phone, notified_welcome FROM reservations WHERE checkin = ?", (today_str,))
     today_checkins = [{"uid": r[0], "checkin": format_date_str(r[1]), "checkout": format_date_str(r[2]), "notified": r[3], "guest_phone": r[4] or "", "notified_welcome": r[5]} for r in cur.fetchall()]
     
-    cur.execute("SELECT uid, checkin, checkout, created_at, notified_checkout, guest_phone, notified_welcome, notified_extension, has_discount, discount_code, booker_country, language FROM reservations ORDER BY checkin DESC LIMIT 100")
+    cur.execute("SELECT uid, checkin, checkout, created_at, notified_checkout, guest_phone, notified_welcome, notified_extension, has_discount, discount_code, booker_country, language, notified_review FROM reservations ORDER BY checkin DESC LIMIT 100")
     all_res = []
     current_hour = datetime.datetime.now().hour
     
     for r in cur.fetchall():
-        uid, c_in, c_out, created_at, notif_out, guest_phone, notif_welcome, notif_ext, has_discount, discount_code, booker_country, guest_lang = r
+        uid, c_in, c_out, created_at, notif_out, guest_phone, notif_welcome, notif_ext, has_discount, discount_code, booker_country, guest_lang, notif_review = r
         
         if today_str > c_out:
             status = "Çıkış Yaptı"
@@ -781,6 +916,7 @@ async def index(request: Request):
             "guest_phone": guest_phone or "",
             "notified_welcome": notif_welcome,
             "notified_extension": notif_ext,
+            "notified_review": notif_review or 0,
             "has_discount": has_discount or 0,
             "discount_code": discount_code or "",
             "booker_country": (booker_country or "").upper(),
@@ -827,12 +963,16 @@ async def save_settings(
     extension_price: str = Form("€75"),
     welcome_auto_send: str = Form("1"),
     welcome_auto_time: str = Form("15:00"),
+    review_auto_send: str = Form("1"),
+    review_auto_time: str = Form("12:30"),
+    google_review_url: str = Form("https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla"),
     msg_new_booking: str = Form(...),
     msg_checkin: str = Form(...),
     msg_checkout: str = Form(...),
     msg_welcome: str = Form(...),
     msg_extension: str = Form(...),
-    msg_discount_confirmed: str = Form(None)
+    msg_discount_confirmed: str = Form(None),
+    msg_review: str = Form(None)
 ):
     update_setting("suite_name", suite_name.strip())
     update_setting("phone_numbers", phone_numbers.strip())
@@ -848,6 +988,9 @@ async def save_settings(
     update_setting("extension_price", extension_price.strip())
     update_setting("welcome_auto_send", welcome_auto_send.strip())
     update_setting("welcome_auto_time", welcome_auto_time.strip())
+    update_setting("review_auto_send", review_auto_send.strip())
+    update_setting("review_auto_time", review_auto_time.strip())
+    update_setting("google_review_url", google_review_url.strip())
     update_setting("msg_new_booking", msg_new_booking.strip())
     update_setting("msg_checkin", msg_checkin.strip())
     update_setting("msg_checkout", msg_checkout.strip())
@@ -855,8 +998,49 @@ async def save_settings(
     update_setting("msg_extension", msg_extension.strip())
     if msg_discount_confirmed:
         update_setting("msg_discount_confirmed", msg_discount_confirmed.strip())
+    if msg_review:
+        update_setting("msg_review", msg_review.strip())
     add_log("Ayarlar ve mesaj şablonları güncellendi.", "info")
     return JSONResponse({"status": "ok", "message": "Tüm ayarlar ve özel mesaj şablonları başarıyla kaydedildi!"})
+
+@app.post("/api/reservation/send-review")
+async def manual_send_review(uid: str = Form(...), phone: str = Form(None)):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("SELECT uid, checkin, checkout, guest_phone, suite_name, booker_country, language FROM reservations WHERE uid = ?", (uid,))
+    row = cur.fetchone()
+    if not row:
+        conn.close()
+        return JSONResponse({"status": "error", "message": "Rezervasyon bulunamadı."})
+        
+    uid_res, c_in, c_out, g_phone, r_suite, booker_country, guest_lang = row
+    target_phone = phone.strip() if (phone and phone.strip()) else (g_phone or "").strip()
+    if not target_phone:
+        conn.close()
+        return JSONResponse({"status": "error", "message": "Lütfen önce misafirin telefon numarasını giriniz."})
+        
+    cfg = get_settings()
+    suite_name = cfg.get("suite_name", r_suite or "Dalaman Airport Suite 11")
+    google_review_url = cfg.get("google_review_url", "https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla")
+    clean_phone = normalize_phone_number(target_phone)
+    lang = guest_lang or detect_guest_language(clean_phone, booker_country)
+    
+    params = {
+        "suite_name": suite_name,
+        "google_review_url": google_review_url
+    }
+    msg = get_multilingual_review(lang, params)
+    res = send_to_guest_or_sandbox(clean_phone, msg, lang, booker_country)
+    
+    if res.get("success"):
+        cur.execute("UPDATE reservations SET guest_phone = ?, notified_review = 1 WHERE uid = ?", (target_phone, uid))
+        conn.commit()
+        conn.close()
+        target_info = "🛡️ [GÜVENLİ TEST MODU] Test telefonuna iletildi" if res.get("sandbox") else f"Misafire iletildi ({clean_phone})"
+        return JSONResponse({"status": "ok", "message": f"Google & Booking.com değerlendirme ricası ({lang.upper()}) {target_info}!"})
+    else:
+        conn.close()
+        return JSONResponse({"status": "error", "message": f"Mesaj iletilemedi: {res.get('error', 'Bilinmeyen hata')}"})
 
 @app.post("/api/reservation/send-extension")
 async def send_extension_offer(uid: str = Form(...)):
@@ -1065,6 +1249,7 @@ async def whatsapp_inbound_webhook(request: Request):
         re.search(r"\b(evet|yes|das10|das75)\b", normalized, re.IGNORECASE)
     )
     is_extension_reply = bool(re.search(r"\b(uzat|extend|stay|gece|night|ekstra)\b", normalized, re.IGNORECASE))
+    is_opt_out = bool(re.search(r"^(iptal|stop|unsubscribe|cikis|çıkış|istemiyorum)\b", normalized, re.IGNORECASE))
     
     cfg = get_settings()
     suite_name = cfg.get("suite_name", "Dalaman Airport Suite")
@@ -1129,6 +1314,30 @@ async def whatsapp_inbound_webhook(request: Request):
         send_whatsapp(host_alert)
         add_log(f"Misafir 'EVET' dedi ve %10 indirim kazandı -> +{clean_phone} ({guest_lang.upper()})", "success")
         
+    elif is_opt_out:
+        intent_label = "Kampanya İptal (Opt-Out)"
+        status_label = "Listeden Çıkarıldı ✓"
+        cur.execute("INSERT OR REPLACE INTO opt_outs (phone, timestamp, reason) VALUES (?, ?, ?)", (clean_phone, now_str, text))
+        conn.commit()
+        
+        opt_replies = {
+            "tr": "✅ Talebiniz alınmıştır. Numaranız bilgilendirme ve kampanya listemizden başarıyla çıkarılmıştır. Teşekkür ederiz.",
+            "de": "✅ Ihre Anfrage wurde erhalten. Ihre Nummer wurde erfolgreich aus unserer Kampagnenliste entfernt. Vielen Dank.",
+            "ru": "✅ Ваш запрос принят. Ваш номер успешно удален из списка рассылки. Спасибо.",
+            "en": "✅ Your request has been received. Your number has been successfully removed from our campaign list. Thank you."
+        }
+        guest_reply = opt_replies.get(guest_lang, opt_replies["en"])
+        send_to_guest_or_sandbox(clean_phone, guest_reply, guest_lang, "")
+        
+        host_alert = (
+            f"🚫 *MİSAFİR KAMPANYADAN ÇIKTI (OPT-OUT):*\n\n"
+            f"📱 *Misafir:* +{clean_phone} ({guest_lang.upper()})\n"
+            f"💬 *Mesaj:* \"{text}\"\n\n"
+            f"Numara sistem tarafından güvenli şekilde kara listeye alındı. Bir daha asla toplu kampanya mesajı iletilmeyecektir."
+        )
+        send_whatsapp(host_alert)
+        add_log(f"Misafir kampanya mesajlarından çıktı (Opt-Out) -> +{clean_phone}", "info")
+        
     elif is_extension_reply:
         intent_label = "Konaklama Uzatma Yanıtı"
         status_label = "Yöneticiye İletildi ✓"
@@ -1140,6 +1349,19 @@ async def whatsapp_inbound_webhook(request: Request):
         )
         send_whatsapp(host_alert)
         add_log(f"Misafir uzatma teklifine yanıt verdi -> +{clean_phone}", "info")
+        
+    else:
+        # Genel misafir sorusu / mesajı
+        intent_label = "Misafir Sorusu / Mesajı"
+        status_label = "Yöneticiye İletildi ✓"
+        host_alert = (
+            f"💬 *MİSAFİRDEN YENİ MESAJ GELDİ!*\n\n"
+            f"📱 *Misafir:* +{clean_phone} ({guest_lang.upper()})\n"
+            f"💬 *Mesaj:* \"{text}\"\n\n"
+            f"Lütfen WhatsApp uygulamanızı açarak misafirin mesajını yanıtlayınız."
+        )
+        send_whatsapp(host_alert)
+        add_log(f"Misafirden yeni mesaj alındı -> +{clean_phone}: \"{text}\"", "info")
         
     cur.execute("""
         INSERT INTO inbound_messages (timestamp, phone, text, intent, language, status)
@@ -1258,7 +1480,9 @@ CAMPAIGN_PRESETS = [
             "Did you know that Autumn is the most relaxing season in Dalaman? The sea temperature is still a warm 24°C, beaches are peaceful, and flights from Europe & Istanbul are currently at bargain rates:\n"
             "✈️ *Dalaman Flight Deals:* https://www.google.com/travel/flights?q=flights+to+DLM\n\n"
             "🎁 As our previous guest, we'd love to offer you a direct booking special with *%15 DISCOUNT* (No platform fees + Promo Code: *AUTUMN15*).\n\n"
-            "Just reply to this message anytime to book your sunny autumn escape! 🌊"
+            "Just reply to this message anytime to book your sunny autumn escape! 🌊\n\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "ℹ️ Bu bilgilendirmeleri almak istemiyorsanız 'IPTAL' veya 'STOP' yazabilirsiniz."
         )
     },
     {
@@ -1271,7 +1495,9 @@ CAMPAIGN_PRESETS = [
             "Escape the winter chill! Just a short drive from {suite_name}, the ancient Sultaniye Thermal Springs are naturally bubbling at 39°C all year round.\n\n"
             "✈️ *Flights to Dalaman:* https://www.google.com/travel/flights?q=flights+to+DLM\n\n"
             "🌴 *Summer 2027 Early Bird:* Secure your next holiday dates now with promo code *EARLY2027* for *%15 OFF* on direct bookings.\n\n"
-            "Reply to this chat anytime to check dates. We'd love to welcome you back!"
+            "Reply to this chat anytime to check dates. We'd love to welcome you back!\n\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "ℹ️ Bu bilgilendirmeleri almak istemiyorsanız 'IPTAL' veya 'STOP' yazabilirsiniz."
         )
     },
     {
@@ -1285,7 +1511,9 @@ CAMPAIGN_PRESETS = [
             "Direct international flight routes to Dalaman (DLM) have officially resumed for the season:\n"
             "✈️ *Flight Schedules & Deals:* https://www.google.com/travel/flights?q=flights+to+DLM\n\n"
             "Book your spring escape directly with us using code *SPRING10* for *%10 DISCOUNT*.\n\n"
-            "Feel free to reply right here on WhatsApp to plan your visit! 🌺"
+            "Feel free to reply right here on WhatsApp to plan your visit! 🌺\n\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "ℹ️ Bu bilgilendirmeleri almak istemiyorsanız 'IPTAL' veya 'STOP' yazabilirsiniz."
         )
     },
     {
@@ -1298,7 +1526,9 @@ CAMPAIGN_PRESETS = [
             "The turquoise waters of Sarıgerme Beach and Göcek 12 Islands are waiting for you!\n\n"
             "Avoid middleman booking commissions and book directly with {suite_name} for guaranteed best rates + complimentary airport perks on weekly stays.\n\n"
             "✈️ *Check Flight Options:* https://www.google.com/travel/flights?q=flights+to+DLM\n\n"
-            "Reply to this message to check our availability. Looking forward to hosting you again!"
+            "Reply to this message to check our availability. Looking forward to hosting you again!\n\n"
+            "━━━━━━━━━━━━━━━━━━━━\n"
+            "ℹ️ Bu bilgilendirmeleri almak istemiyorsanız 'IPTAL' veya 'STOP' yazabilirsiniz."
         )
     }
 ]
@@ -1334,6 +1564,10 @@ async def send_campaign(
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     
+    # Kara listedeki (IPTAL / STOP yazmış) numaraları çek
+    cur.execute("SELECT phone FROM opt_outs")
+    opted_out = set([normalize_phone_number(r[0]) for r in cur.fetchall() if r[0]])
+    
     if custom_phone and custom_phone.strip():
         recipients = [normalize_phone_number(custom_phone)]
     elif target == "all_phones":
@@ -1344,10 +1578,15 @@ async def send_campaign(
         recipients = [normalize_phone_number(r[0]) for r in cur.fetchall() if r[0]]
         
     conn.close()
-    recipients = list(set([p for p in recipients if p and len(p) >= 8]))
+    recipients = list(set([p for p in recipients if p and len(p) >= 8 and p not in opted_out]))
+    
+    # Spam koruması için nazik Opt-Out (Çıkış) uyarısını mesaja ekle
+    opt_notice = "\n\n━━━━━━━━━━━━━━━━━━━━\nℹ️ Bilgilendirmeleri almak istemiyorsanız bu mesaja 'IPTAL' veya 'STOP' yazabilirsiniz."
+    if "IPTAL" not in message and "STOP" not in message:
+        message = message + opt_notice
     
     if not recipients:
-        return JSONResponse({"status": "error", "message": "Seçilen filtreye uygun kayıtlı misafir telefon numarası bulunamadı."})
+        return JSONResponse({"status": "error", "message": "Seçilen filtreye uygun kayıtlı (veya listeden çıkmamış) misafir numarası bulunamadı."})
         
     if sandbox_mode:
         # GÜVENLİ TEST MODU: Gerçek misafirlere ASLA gitmez! Sadece test_phone'a önizleme gider!
@@ -1444,6 +1683,7 @@ async def test_sandbox_sample(msg_type: str = Form(...), lang: str = Form("de"))
         "checkin_hour": checkin_hour,
         "checkout_hour": checkout_hour,
         "maps_url": maps_url,
+        "google_review_url": cfg.get("google_review_url", maps_url),
         "extension_price": ext_price
     }
     
@@ -1459,6 +1699,9 @@ async def test_sandbox_sample(msg_type: str = Form(...), lang: str = Form("de"))
     elif msg_type == "discount":
         content = get_multilingual_discount_confirmed(lang, params)
         title = f"%10 Web İndirim Kuponu DAS10 ({lang_label})"
+    elif msg_type == "review":
+        content = get_multilingual_review(lang, params)
+        title = f"Google & Booking Değerlendirme Ricası ({lang_label})"
     else:
         content = CAMPAIGN_PRESETS[0]["template"].replace("{suite_name}", suite_name)
         title = f"Mevsimsel Kampanya Önizlemesi ({lang_label})"

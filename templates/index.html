@@ -347,6 +347,10 @@
                                                 class="{% if r.notified_extension %}bg-slate-800 hover:bg-slate-700 text-slate-300{% else %}bg-amber-500 hover:bg-amber-600 text-white{% endif %} text-[11px] px-2.5 py-1 rounded-lg font-medium flex items-center gap-1 transition shadow-xs whitespace-nowrap cursor-pointer">
                                             <i class="fa-solid fa-gift text-amber-200"></i> {% if r.notified_extension %}Uzatıldı ✓{% else %}Uzat{% endif %}
                                         </button>
+                                        <button onclick="sendReview('{{ r.uid }}', 'phone_res_{{ loop.index }}')" title="Google & Booking.com Değerlendirme Ricası Gönder (Kendi Dilinde)"
+                                                class="{% if r.notified_review %}bg-slate-800 hover:bg-slate-700 text-slate-300{% else %}bg-amber-600 hover:bg-amber-500 text-white{% endif %} text-[11px] px-2 py-1 rounded-lg font-medium flex items-center gap-1 transition shadow-xs whitespace-nowrap cursor-pointer">
+                                            <i class="fa-solid fa-star text-amber-300"></i> {% if r.notified_review %}Yorum İstendi ✓{% else %}Yorum İste{% endif %}
+                                        </button>
                                         <button onclick="resendBookingAlert('{{ r.uid }}')" title="Bu rezervasyonun 'Yeni Rezervasyon Düştü' bildirimini WhatsApp yöneticilerine tekrar ilet"
                                                 class="bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 text-[11px] px-2 py-1 rounded-lg font-medium flex items-center gap-1 transition shadow-xs whitespace-nowrap cursor-pointer">
                                             <i class="fa-solid fa-bell text-violet-500"></i> Bildir
@@ -591,6 +595,10 @@
                         <button onclick="testSandboxSample('discount', 'de')" class="w-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-900 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer shadow-xs">
                             <i class="fa-solid fa-tag text-emerald-600"></i> Misafir "EVET" Yazınca Gidecek %10 DAS10 Kuponu Test Et
                         </button>
+
+                        <button onclick="testSandboxSample('review', 'tr')" class="w-full bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer shadow-xs">
+                            <i class="fa-solid fa-star text-amber-500"></i> ⭐ Google & Booking.com Değerlendirme Ricası Mesajını Test Et
+                        </button>
                     </div>
                 </div>
 
@@ -760,6 +768,30 @@
                                     </select>
                                 </div>
                             </div>
+
+                            <!-- Saat 12:30'da Otomatik Google & Booking.com Yorum Ricası -->
+                            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 bg-amber-50/80 p-3 rounded-xl border border-amber-200">
+                                <div>
+                                    <p class="text-xs font-bold text-amber-950 uppercase flex items-center gap-1.5">
+                                        <i class="fa-solid fa-star text-amber-500"></i> Otomatik Google & Booking Yorum Ricası (Saat 12:30)
+                                    </p>
+                                    <p class="text-[10px] text-slate-500">Çıkış günü saat 12:30'da misafire teşekkür ve Google 5 yıldız + Booking 10/10 değerlendirme mesajı iletir.</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <input type="time" name="review_auto_time" value="{{ config.review_auto_time or '12:30' }}" 
+                                           class="px-2 py-1 text-xs border border-amber-300 rounded-lg bg-white outline-none">
+                                    <select name="review_auto_send" class="text-xs font-semibold bg-white border border-amber-300 text-amber-900 rounded-lg px-2 py-1 outline-none">
+                                        <option value="1" {% if config.review_auto_send != '0' %}selected{% endif %}>Otomatik: Açık</option>
+                                        <option value="0" {% if config.review_auto_send == '0' %}selected{% endif %}>Otomatik: Kapalı</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">Google Haritalar Değerlendirme / Yorum Linki</label>
+                                <input type="text" name="google_review_url" value="{{ config.google_review_url or 'https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla' }}" required
+                                       class="w-full px-2.5 py-1.5 border rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-amber-500">
+                            </div>
                         </div>
 
                         <!-- Konaklama Uzatma & Hatırlatma -->
@@ -815,6 +847,11 @@
                             <div>
                                 <label class="block text-[11px] font-semibold text-slate-700 mb-1">🎉 Misafir "EVET/YES" Yazınca Gidecek %10 Web İndirimi Onayı (Kupon: DAS10)</label>
                                 <textarea name="msg_discount_confirmed" rows="4" class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500 font-sans bg-white">{{ config.msg_discount_confirmed }}</textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-700 mb-1">⭐ Google & Booking.com Değerlendirme & Yorum Ricası Şablonu (Türkçe / Genel)</label>
+                                <textarea name="msg_review" rows="4" class="w-full px-3 py-2 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-500 font-sans bg-white">{{ config.msg_review }}</textarea>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1054,6 +1091,22 @@
                 if (json.status === 'ok') setTimeout(() => location.reload(), 1500);
             } catch (err) {
                 showAlert('Uzatma teklifi hatası: ' + err, false);
+            }
+        }
+
+        async function sendReview(uid, inputId) {
+            const phone = document.getElementById(inputId) ? document.getElementById(inputId).value : '';
+            try {
+                showAlert('Google & Booking.com değerlendirme ricası gönderiliyor...', true);
+                const data = new FormData();
+                data.append('uid', uid);
+                if (phone) data.append('phone', phone);
+                const res = await fetch('/api/reservation/send-review', { method: 'POST', body: data });
+                const json = await res.json();
+                showAlert(json.message, json.status === 'ok');
+                if (json.status === 'ok') setTimeout(() => location.reload(), 1500);
+            } catch (err) {
+                showAlert('Yorum mesajı hatası: ' + err, false);
             }
         }
 
