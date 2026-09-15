@@ -1240,9 +1240,14 @@ async def whatsapp_inbound_webhook(request: Request):
     last_9 = clean_phone[-9:] if len(clean_phone) >= 9 else clean_phone
     normalized = text.lower().strip()
     
-    add_log(f"Misafir WhatsApp yanıtı alındı (+{clean_phone}): {text}", "info")
+    cfg = get_settings()
+    test_phone = re.sub(r"\D", "", cfg.get("test_phone", "905423673499"))
     
-    # 1. EVET / YES, DAS10 ve Web Sitesi İndirim Kontrolü (Opt-in Hook)
+    # 1. Yöneticinin kendi numarasından gelen mesajları yok say (döngü ve kişisel sohbet engeli)
+    if clean_phone.endswith("5423673499") or (test_phone and clean_phone == test_phone):
+        return JSONResponse({"status": "ignored", "message": "Yönetici kendi numarası yok sayıldı"})
+    
+    # 2. İndirim / Web Sitesi / Çıkış anahtar kelime kontrolleri
     is_website_lead = bool(re.search(r"\b(das10|dalamanairportsuites|sitenizden|web|site)\b", normalized, re.IGNORECASE))
     is_affirmative = bool(
         re.search(r"^(evet|yes|kabul|sure|ok|tamam|istiyorum|yaparız|yapariz|indirim)\b", normalized, re.IGNORECASE) or 
@@ -1251,9 +1256,6 @@ async def whatsapp_inbound_webhook(request: Request):
     is_extension_reply = bool(re.search(r"\b(uzat|extend|stay|gece|night|ekstra)\b", normalized, re.IGNORECASE))
     is_opt_out = bool(re.search(r"^(iptal|stop|unsubscribe|cikis|çıkış|istemiyorum)\b", normalized, re.IGNORECASE))
     
-    cfg = get_settings()
-    suite_name = cfg.get("suite_name", "Dalaman Airport Suite")
-    
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     
@@ -1261,6 +1263,13 @@ async def whatsapp_inbound_webhook(request: Request):
     cur.execute("SELECT uid, checkin, checkout, guest_phone, has_discount FROM reservations WHERE guest_phone LIKE ? ORDER BY checkin DESC LIMIT 1", (f"%{last_9}%",))
     res_row = cur.fetchone()
     
+    # Sistemde kayıtlı bir misafir DEĞİLSE ve web sitesinden doğrudan kuponla yazmamışsa:
+    # Bu kullanıcının kişisel sohbeti / arkadaşı / rehberindeki biridir; BOTA VE PANELE ASLA KARIŞTIRILMAZ!
+    if not res_row and not is_website_lead:
+        conn.close()
+        return JSONResponse({"status": "ignored", "message": "Kayıtlı misafir değil; kişisel sohbet yok sayıldı."})
+    
+    suite_name = cfg.get("suite_name", "Dalaman Airport Suite")
     now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     intent_label = "Genel Mesaj"
     status_label = "Kayıt Edildi"
@@ -1303,16 +1312,9 @@ async def whatsapp_inbound_webhook(request: Request):
         disc_msg = get_multilingual_discount_confirmed(guest_lang, params)
         send_to_guest_or_sandbox(clean_phone, disc_msg, guest_lang, "")
             
-        # Yöneticiye anında WhatsApp alarmı gönder
-        host_alert = (
-            f"🎁 *MİSAFİR 'EVET' DEDİ & %10 WEB İNDİRİMİ KAZANDI!*\n\n"
-            f"📱 *Misafir:* +{clean_phone} ({guest_lang.upper()})\n"
-            f"💬 *Mesaj:* \"{text}\"\n"
-            f"🏷 *Kupon:* DAS10 (%10 Web İndirimi Aktif)\n\n"
-            f"Misafir doğrudan iletişim ve %10 indirim onayını verdi. Misafire kendi dilinde indirim kuponu iletildi."
-        )
-        send_whatsapp(host_alert)
-        add_log(f"Misafir 'EVET' dedi ve %10 indirim kazandı -> +{clean_phone} ({guest_lang.upper()})", "success")
+        # Kullanıcı isteği: 'EVET' dediğinde yöneticiye WhatsApp mesajı gönderilmez, 
+        # durum yalnızca web panelinde (Gelen Mesajlar & Rezervasyonlar) ve logda tutulur.
+        add_log(f"Misafir 'EVET' dedi ve %10 indirim kuponu iletildi -> +{clean_phone} ({guest_lang.upper()})", "success")
         
     elif is_opt_out:
         intent_label = "Kampanya İptal (Opt-Out)"
@@ -1351,17 +1353,10 @@ async def whatsapp_inbound_webhook(request: Request):
         add_log(f"Misafir uzatma teklifine yanıt verdi -> +{clean_phone}", "info")
         
     else:
-        # Genel misafir sorusu / mesajı
-        intent_label = "Misafir Sorusu / Mesajı"
-        status_label = "Yöneticiye İletildi ✓"
-        host_alert = (
-            f"💬 *MİSAFİRDEN YENİ MESAJ GELDİ!*\n\n"
-            f"📱 *Misafir:* +{clean_phone} ({guest_lang.upper()})\n"
-            f"💬 *Mesaj:* \"{text}\"\n\n"
-            f"Lütfen WhatsApp uygulamanızı açarak misafirin mesajını yanıtlayınız."
-        )
-        send_whatsapp(host_alert)
-        add_log(f"Misafirden yeni mesaj alındı -> +{clean_phone}: \"{text}\"", "info")
+        # Belirli bir bot tetikleyicisi içermeyen misafir mesajları (normal sohbet)
+        # Yöneticiyi WhatsApp bildirimleriyle boğmamak için işlem yapılmaz.
+        conn.close()
+        return JSONResponse({"status": "ignored", "message": "Bot anahtar kelimesi içermiyor"})
         
     cur.execute("""
         INSERT INTO inbound_messages (timestamp, phone, text, intent, language, status)
