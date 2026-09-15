@@ -21,8 +21,9 @@ The web dashboard is organized into 4 intuitive tabs for clutter-free operations
 
 1. **🏨 Reception & Active Guests (`Resepsiyon & Misafirler`):**
    - **Live KPI Counter Cards:** Real-time metrics for Total Reservations, Today's Check-ins, Current Stays, Today's Check-outs, and Upcoming Arrivals.
-   - **Instant Filter Pills & Search:** Filter bookings instantly by status (*All*, *Today's Check-in*, *Staying*, *Today's Check-out*, *Upcoming*) or search by name/UID in real-time.
+   - **Instant Filter Pills & Search:** Filter bookings instantly by status (*All*, *Today's Check-in*, *Staying*, *Today's Check-out*, *Upcoming*, or *🎁 'EVET' / Discount Leads*) and search by phone/dates in real-time.
    - **Guest Language Badges:** Automatically identifies guest language (🇩🇪 DE, 🇷🇺 RU, 🇹🇷 TR, 🇬🇧 EN) based on phone country code.
+   - **Live Inbound WhatsApp Replies Table:** Real-time log of incoming messages from guests ("EVET", "YES", "DAS10"), automated coupon confirmations, and 1-click WhatsApp reply buttons.
    - **Interactive Action Buttons:**
      - `[Karşıla]` (Welcome & Wi-Fi in guest's native language)
      - `[🎁 Uzat]` (Send €75 stay extension upsell offer)
@@ -191,8 +192,9 @@ Yönetim paneli tüm operasyonları karmaşadan uzak, 4 mantıksal sekmeyle yön
 
 1. **🏨 Resepsiyon & Misafirler Sekmesi:**
    - **Canlı KPI İstatistik Kartları:** Toplam Rezervasyon, Bugün Giriş, Konaklayanlar, Bugün Çıkış ve Gelecek Rezervasyon sayılarını anlık gösterir.
-   - **Filtre Hapları (Pills) & Canlı Arama:** Rezervasyonları tek tıkla (*Tümü*, *Bugün Giriş*, *Konaklayanlar*, *Bugün Çıkış*, *Gelecek*) filtreleyebilir, isim veya rezervasyon koduna göre anlık arayabilirsiniz.
+   - **Filtre Hapları (Pills) & Canlı Arama:** Rezervasyonları tek tıkla (*Tümü*, *Bugün Giriş*, *Konaklayanlar*, *Bugün Çıkış*, *Gelecek*, veya *🎁 'EVET' Diyenler*) filtreleyebilir, isim veya rezervasyon koduna göre anlık arayabilirsiniz.
    - **Otomatik Dil Rozetleri:** Misafirin telefon ülke koduna göre ana dilini tespit eder (🇩🇪 DE, 🇷🇺 RU, 🇹🇷 TR, 🇬🇧 EN).
+   - **Canlı Gelen WhatsApp Yanıtları Tablosu:** Misafirlerin "EVET", "YES", "DAS10" veya uzatma yanıtlarını anlık gösteren, otomatik kupon ve tek tıkla WhatsApp sohbet butonlu canlı akış tablosu.
    - **Aksiyon Butonları:**
      - `[Karşıla]` (Misafirin ana dilinde Wi-Fi & karşılama mesajı)
      - `[🎁 Uzat]` (Ertesi gün boşsa €75 indirimli doğrudan uzatma teklifi)
