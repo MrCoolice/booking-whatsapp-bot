@@ -77,6 +77,11 @@ def init_db():
             status TEXT
         )
     """)
+    try:
+        # Geçmiş testlerden kalma kişisel/genel sohbetleri otomatik temizle
+        cur.execute("DELETE FROM inbound_messages WHERE intent = 'Genel Mesaj' OR intent LIKE '%Genel%'")
+    except Exception:
+        pass
     
     cur.execute("""
         CREATE TABLE IF NOT EXISTS opt_outs (
@@ -927,8 +932,8 @@ async def index(request: Request):
     cur.execute("SELECT timestamp, message, status FROM logs ORDER BY id DESC LIMIT 40")
     logs = [{"time": r[0], "msg": r[1], "status": r[2]} for r in cur.fetchall()]
     
-    cur.execute("SELECT timestamp, phone, text, intent, language, status FROM inbound_messages ORDER BY id DESC LIMIT 30")
-    inbound_messages = [{"time": r[0], "phone": r[1], "text": r[2], "intent": r[3], "lang": r[4], "status": r[5]} for r in cur.fetchall()]
+    cur.execute("SELECT id, timestamp, phone, text, intent, language, status FROM inbound_messages WHERE intent != 'Genel Mesaj' AND intent NOT LIKE '%Genel%' ORDER BY id DESC LIMIT 50")
+    inbound_messages = [{"id": r[0], "time": r[1], "phone": r[2], "text": r[3], "intent": r[4], "lang": r[5], "status": r[6]} for r in cur.fetchall()]
     
     cur.execute("SELECT COUNT(*) FROM reservations WHERE has_discount = 1")
     discount_res_count = cur.fetchone()[0]
@@ -1365,6 +1370,26 @@ async def whatsapp_inbound_webhook(request: Request):
     conn.commit()
     conn.close()
     return JSONResponse({"status": "ok", "processed": True})
+
+@app.post("/api/inbound/clear")
+async def clear_inbound_messages():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("DELETE FROM inbound_messages")
+    conn.commit()
+    conn.close()
+    add_log("Gelen WhatsApp yanıtları geçmişi temizlendi.", "info")
+    return JSONResponse({"status": "ok", "message": "Gelen yanıtlar listesi başarıyla temizlendi."})
+
+@app.post("/api/inbound/delete")
+async def delete_inbound_message(id: int = Form(...)):
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("DELETE FROM inbound_messages WHERE id = ?", (id,))
+    conn.commit()
+    conn.close()
+    return JSONResponse({"status": "ok", "message": "Kayıt silindi."})
+
 
 # -------------------------------------------------------------
 # BOOKING CSV / TSV TOPLU İÇE AKTARMA (IMPORT)
