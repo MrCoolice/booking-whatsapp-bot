@@ -65,6 +65,18 @@ def init_db():
         )
     """)
     
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS inbound_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            phone TEXT,
+            text TEXT,
+            intent TEXT,
+            language TEXT,
+            status TEXT
+        )
+    """)
+    
     defaults = {
         "sandbox_mode": "1", # 1: Güvenli Test Modu Açık, 0: Canlı Mod
         "test_phone": "+905423674599",
@@ -776,8 +788,14 @@ async def index(request: Request):
             "created_at": created_at
         })
         
-    cur.execute("SELECT timestamp, message, status FROM logs ORDER BY id DESC LIMIT 15")
+    cur.execute("SELECT timestamp, message, status FROM logs ORDER BY id DESC LIMIT 40")
     logs = [{"time": r[0], "msg": r[1], "status": r[2]} for r in cur.fetchall()]
+    
+    cur.execute("SELECT timestamp, phone, text, intent, language, status FROM inbound_messages ORDER BY id DESC LIMIT 30")
+    inbound_messages = [{"time": r[0], "phone": r[1], "text": r[2], "intent": r[3], "lang": r[4], "status": r[5]} for r in cur.fetchall()]
+    
+    cur.execute("SELECT COUNT(*) FROM reservations WHERE has_discount = 1")
+    discount_res_count = cur.fetchone()[0]
     
     conn.close()
     
@@ -788,6 +806,8 @@ async def index(request: Request):
         "today_checkouts": today_checkouts,
         "today_checkins": today_checkins,
         "reservations": all_res,
+        "inbound_messages": inbound_messages,
+        "discount_count": discount_res_count,
         "logs": logs
     })
 
@@ -1056,7 +1076,14 @@ async def whatsapp_inbound_webhook(request: Request):
     cur.execute("SELECT uid, checkin, checkout, guest_phone, has_discount FROM reservations WHERE guest_phone LIKE ? ORDER BY checkin DESC LIMIT 1", (f"%{last_9}%",))
     res_row = cur.fetchone()
     
+    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    intent_label = "Genel Mesaj"
+    status_label = "Kayıt Edildi"
+    guest_lang = detect_guest_language(clean_phone, "")
+
     if is_website_lead:
+        intent_label = "Web Sitesi (%10 DAS10)"
+        status_label = "Yöneticiye Bildirildi ✓"
         if res_row:
             uid, c_in, c_out, g_phone, has_disc = res_row
             cur.execute("UPDATE reservations SET has_discount = 1, discount_code = 'DAS10' WHERE uid = ?", (uid,))
@@ -1073,7 +1100,8 @@ async def whatsapp_inbound_webhook(request: Request):
         add_log(f"Web sitesinden doğrudan rezervasyon talebi alındı (DAS10) -> +{clean_phone}", "success")
         
     elif is_affirmative:
-        guest_lang = "en"
+        intent_label = "İndirim Onayı ('EVET')"
+        status_label = "%10 Kupon (DAS10) İletildi ✓"
         if res_row:
             uid, c_in, c_out, g_phone, has_disc = res_row
             cur.execute("SELECT booker_country, language FROM reservations WHERE uid = ?", (uid,))
@@ -1099,8 +1127,11 @@ async def whatsapp_inbound_webhook(request: Request):
             f"Misafir doğrudan iletişim ve %10 indirim onayını verdi. Misafire kendi dilinde indirim kuponu iletildi."
         )
         send_whatsapp(host_alert)
+        add_log(f"Misafir 'EVET' dedi ve %10 indirim kazandı -> +{clean_phone} ({guest_lang.upper()})", "success")
         
     elif is_extension_reply:
+        intent_label = "Konaklama Uzatma Yanıtı"
+        status_label = "Yöneticiye İletildi ✓"
         host_alert = (
             f"🚨 *MİSAFİR UZATMA TEKLİFİNE YANIT VERDİ!*\n\n"
             f"📱 *Misafir:* +{clean_phone}\n"
@@ -1108,7 +1139,13 @@ async def whatsapp_inbound_webhook(request: Request):
             f"Lütfen WhatsApp uygulamanızı açıp misafirle görüşmeyi tamamlayınız."
         )
         send_whatsapp(host_alert)
+        add_log(f"Misafir uzatma teklifine yanıt verdi -> +{clean_phone}", "info")
         
+    cur.execute("""
+        INSERT INTO inbound_messages (timestamp, phone, text, intent, language, status)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (now_str, clean_phone, text, intent_label, guest_lang, status_label))
+    conn.commit()
     conn.close()
     return JSONResponse({"status": "ok", "processed": True})
 
