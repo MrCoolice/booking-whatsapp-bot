@@ -100,12 +100,17 @@ async function startSock() {
 
             if (!text || !text.trim()) continue;
 
-            const phone = sender.split('@')[0];
-            console.log(`[INBOUND] Misafirden mesaj geldi (${phone}): ${text}`);
+            const isLid = sender.endsWith('@lid');
+            let phone = sender.split('@')[0];
+            if (msg.key.participant && msg.key.participant.includes('@s.whatsapp.net')) {
+                phone = msg.key.participant.split('@')[0];
+            }
+            console.log(`[INBOUND] Gelen mesaj (${phone}${isLid ? ' [LID]' : ''}): ${text}`);
 
             try {
                 const postData = JSON.stringify({
                     phone: phone,
+                    is_lid: isLid,
                     text: text.trim(),
                     message_id: msg.key.id,
                     timestamp: msg.messageTimestamp
