@@ -435,4 +435,23 @@ Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır. Dilediğiniz gibi geli�
 
 ---
 
+## 🔮 Gelecek Yol Haritası & Yapılacaklar (Roadmap)
+
+### 📌 1. Netgsm Kurumsal WhatsApp Hattı Geçişi (`0542 367 45 99` ➔ Netgsm Sabit Hat)
+- **Referans:** [Netgsm Kurumsal WhatsApp Hattı](https://www.netgsm.com.tr/sabit-telefon/kurumsal-whatsapp-hatti)
+- **Amaç:** Şu an bot ve misafir iletişimi yöneticinin şahsi cep telefonu (`+905423674599`) üzerinden yürütülmektedir. Şahsi sohbetler ile otel misafir trafiğini %100 birbirinden ayırmak ve misafirlere profesyonel kurumsal bir hat sunmak için Netgsm kurumsal sabit hattına geçiş planlanmıştır.
+- **Seçenekler:**
+  - **0850'li Kurumsal Hat:** Türkiye geneli kurumsal algı (Örn: `0850 30X XX XX`).
+  - **0252 Coğrafi Sabit Hat:** Dalaman / Muğla yerel güven hissi veren sabit hat (Örn: `0252 XXX XX XX`).
+- **Geçiş & Kurulum Adımları:**
+  1. **Abonelik & Numara Tahsisi:** Netgsm üzerinden kurumsal sabit telefon aboneliği açılıp numara seçimi yapılacak.
+  2. **Sesli Doğrulama (OTP):** Sabit hatlar SMS alamayacağından, Netgsm Webportal (*Sabit Telefon > Ayarlar*) üzerinden çağrılar geçici olarak yöneticinin cep telefonuna (`0542 367 45 99`) yönlendirilecek.
+  3. **WhatsApp Business Tescili:** WhatsApp Business uygulamasında sabit numara girilecek, *"Beni Ara"* seçeneğiyle gelen arama dinlenerek 6 haneli onay kodu girilecek.
+  4. **Bot Gateway Eşleştirmesi:** Proxmox CT'deki gateway oturumu (`auth_info`) sıfırlanıp web panelindeki QR kod bu yeni kurumsal hattan okutulacak.
+  5. **Rol Ayrımı (Şahsi vs Kurumsal):**
+     - **Misafirlere Giden Hat:** Netgsm Kurumsal Numarası (Web sitesi, Wi-Fi karşılama, kuponlar, uzatma teklifleri, yorum ricaları).
+     - **Yönetici Dahili Alarm Hattı (`admin_phone`):** Yöneticinin şahsi cep telefonu (`0542 367 45 99`). Yeni rezervasyon, iptal/opt-out veya misafir talepleri yöneticinin kendi cebine alarm olarak gelmeye devam edecek.
+
+---
+
 **Geliştirici:** [Ulaş Özbek (GölgeSiber)](https://golgesiber.com)
