@@ -1226,6 +1226,27 @@ async def wa_gateway_qr_view():
     except Exception as e:
         return HTMLResponse(content=f"<div style='font-family:sans-serif; text-align:center; padding:50px;'><h3>Gateway Bağlantı Hatası: {e}</h3></div>", status_code=500)
 
+@app.post("/api/whatsapp/reconnect")
+async def wa_gateway_reconnect():
+    try:
+        r = requests.post("http://127.0.0.1:3000/reconnect", timeout=5)
+        add_log("WhatsApp bağlantısı ve oturumu manuel olarak tazelendi.", "info")
+        return JSONResponse(r.json())
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": f"Bağlantı tazeleme hatası: {str(e)}"})
+
+@app.post("/api/whatsapp/repair")
+async def wa_gateway_repair(phone: str = Form(None)):
+    try:
+        payload = {"phone": phone} if phone else {}
+        r = requests.post("http://127.0.0.1:3000/repair-session", json=payload, timeout=5)
+        phone_info = f" (+{phone})" if phone else ""
+        add_log(f"WhatsApp şifreleme oturumu onarıldı{phone_info}.", "success")
+        return JSONResponse(r.json())
+    except Exception as e:
+        return JSONResponse({"status": "error", "message": f"Oturum onarma hatası: {str(e)}"})
+
+
 # -------------------------------------------------------------
 # İKİ YÖNLÜ DİNLİYİCİ WEBHOOK (GUEST INBOUND WHATSAPP HOOK)
 # -------------------------------------------------------------

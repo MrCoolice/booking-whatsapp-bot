@@ -21,7 +21,37 @@ let qrCodeData = null;
 let qrCodeImage = null;
 let connectionStatus = 'disconnected'; // 'disconnected', 'connecting', 'qr_ready', 'connected'
 let connectedUser = null;
-const sentMessages = new Map();
+
+// Kalıcı Mesaj Hafızası (Persistent Message Store for E2EE Retry Receipts)
+const STORE_FILE = path.join(__dirname, 'sent_messages_store.json');
+let sentMessages = new Map();
+
+function loadSentMessages() {
+    try {
+        if (fs.existsSync(STORE_FILE)) {
+            const raw = fs.readFileSync(STORE_FILE, 'utf-8');
+            const data = JSON.parse(raw);
+            if (Array.isArray(data)) {
+                sentMessages = new Map(data);
+                console.log(`[STORE] ${sentMessages.size} adet gonderilmis mesaj onbellegi yuklendi.`);
+            }
+        }
+    } catch (e) {
+        console.error('[STORE] Onbellek yukleme hatasi:', e.message);
+        sentMessages = new Map();
+    }
+}
+
+function saveSentMessages() {
+    try {
+        const arr = Array.from(sentMessages.entries()).slice(-1000); // Son 1000 mesaji sakla
+        fs.writeFileSync(STORE_FILE, JSON.stringify(arr), 'utf-8');
+    } catch (e) {
+        console.error('[STORE] Onbellek kayit hatasi:', e.message);
+    }
+}
+
+loadSentMessages();
 
 async function startSock() {
     connectionStatus = 'connecting';
@@ -37,7 +67,8 @@ async function startSock() {
         syncFullHistory: false,
         markOnlineOnConnect: true,
         getMessage: async (key) => {
-            if (sentMessages.has(key.id)) {
+            if (key && key.id && sentMessages.has(key.id)) {
+                console.log(`[RETRY] Sifreleme retry talebi karsilandi -> Key ID: ${key.id}`);
                 return sentMessages.get(key.id);
             }
             return undefined;
@@ -223,12 +254,14 @@ app.post('/send', async (req, res) => {
         }
 
         const sent = await sock.sendMessage(jid, { text: message });
-        if (sent && sent.key && sent.key.id && sent.message) {
-            sentMessages.set(sent.key.id, sent.message);
-            if (sentMessages.size > 500) {
+        if (sent && sent.key && sent.key.id) {
+            const msgContent = sent.message || { conversation: message };
+            sentMessages.set(sent.key.id, msgContent);
+            if (sentMessages.size > 1000) {
                 const firstKey = sentMessages.keys().next().value;
                 sentMessages.delete(firstKey);
             }
+            saveSentMessages();
         }
         return res.json({
             success: true,
@@ -238,6 +271,56 @@ app.post('/send', async (req, res) => {
     } catch (err) {
         console.error('Mesaj gonderme hatasi:', err);
         return res.status(500).json({ error: err.message || 'Mesaj gonderilemedi' });
+    }
+});
+
+// 5. WhatsApp Baglantisini ve Soketini Yenileme (POST /reconnect)
+app.post('/reconnect', async (req, res) => {
+    try {
+        console.log('[RECONNECT] Manuel yeniden baglanma ve oturum tazeleme talebi alindi.');
+        if (sock) {
+            try { sock.end(undefined); } catch (e) {}
+        }
+        connectionStatus = 'connecting';
+        setTimeout(startSock, 1500);
+        return res.json({ success: true, message: 'WhatsApp soketi ve oturumu yeniden baslatiliyor...' });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+// 6. Belirli Bir Numarada Takilan Sifreleme Oturumunu Onarma (POST /repair-session)
+app.post('/repair-session', async (req, res) => {
+    const rawPhone = req.body.phone || req.body.jid;
+    try {
+        let deletedCount = 0;
+        if (rawPhone) {
+            const cleanPhone = String(rawPhone).replace(/\D/g, '');
+            console.log(`[REPAIR] Spesifik numara oturumu onariliyor: +${cleanPhone}`);
+            if (fs.existsSync(AUTH_DIR)) {
+                const files = fs.readdirSync(AUTH_DIR);
+                for (const f of files) {
+                    if (f.includes(cleanPhone)) {
+                        try {
+                            fs.unlinkSync(path.join(AUTH_DIR, f));
+                            deletedCount++;
+                        } catch (e) {}
+                    }
+                }
+                console.log(`[REPAIR] +${cleanPhone} icin ${deletedCount} adet takilan oturum anahtari sifirlandi.`);
+            }
+        }
+        if (sock) {
+            try { sock.end(undefined); } catch (e) {}
+        }
+        setTimeout(startSock, 1500);
+        return res.json({ 
+            success: true, 
+            deletedFiles: deletedCount,
+            message: rawPhone ? `+${String(rawPhone).replace(/\D/g, '')} icin sifreleme anahtarlari sifirlandi ve oturum yenilendi.` : 'Oturum anahtarlari yenilendi.' 
+        });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
     }
 });
 

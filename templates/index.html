@@ -45,6 +45,11 @@
                     <span id="waText">WhatsApp: Kontrol Ediliyor</span>
                 </button>
 
+                <!-- WhatsApp Bağlantısını & Oturumu Yenile Butonu -->
+                <button onclick="reconnectWhatsApp()" id="reconnectWaBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border border-slate-700 shadow-sm cursor-pointer" title="Mesaj takıldığında veya şifreleme geciktiğinde bağlantıyı ve oturumu otomatik tazeler">
+                    <i class="fa-solid fa-arrows-rotate text-emerald-400"></i> <span class="hidden sm:inline">Bağlantıyı</span> Tazele
+                </button>
+
                 <button onclick="syncNow()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-sm cursor-pointer">
                     <i class="fa-solid fa-arrows-rotate"></i> Şimdi Eşle
                 </button>
@@ -113,9 +118,14 @@
                 </div>
             </div>
 
-            <div class="border-t pt-3 flex justify-between items-center text-xs text-slate-500">
+            <div class="border-t pt-3 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-slate-500">
                 <span id="waModalStatus">Durum: Bekleniyor...</span>
-                <button onclick="closeWhatsAppModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-1.5 rounded-lg font-medium cursor-pointer">Kapat</button>
+                <div class="flex items-center gap-2">
+                    <button onclick="reconnectWhatsApp()" class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 px-3 py-1.5 rounded-lg font-semibold cursor-pointer flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-arrows-rotate text-amber-600"></i> Oturumu Onar
+                    </button>
+                    <button onclick="closeWhatsAppModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-1.5 rounded-lg font-medium cursor-pointer">Kapat</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1184,6 +1194,37 @@
             if (waCheckInterval) {
                 clearInterval(waCheckInterval);
                 waCheckInterval = null;
+            }
+        }
+
+        async function reconnectWhatsApp() {
+            try {
+                showAlert('WhatsApp bağlantısı ve şifreleme oturumu tazeleniyor, lütfen bekleyin...', true);
+                const btn = document.getElementById('reconnectWaBtn');
+                if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-emerald-400"></i> Yenileniyor...';
+                const res = await fetch('/api/whatsapp/reconnect', { method: 'POST' });
+                const json = await res.json();
+                showAlert(json.message || 'WhatsApp oturumu başarıyla tazelendi!', true);
+                setTimeout(checkWaStatus, 2000);
+            } catch (err) {
+                showAlert('Yeniden bağlanma hatası: ' + err, false);
+            } finally {
+                const btn = document.getElementById('reconnectWaBtn');
+                if (btn) btn.innerHTML = '<i class="fa-solid fa-arrows-rotate text-emerald-400"></i> <span class="hidden sm:inline">Bağlantıyı</span> Tazele';
+            }
+        }
+
+        async function repairWhatsAppSession(phone) {
+            try {
+                showAlert('Spesifik numara şifreleme oturumu onarılıyor...', true);
+                const data = new FormData();
+                if (phone) data.append('phone', phone);
+                const res = await fetch('/api/whatsapp/repair', { method: 'POST', body: data });
+                const json = await res.json();
+                showAlert(json.message || 'Oturum anahtarları başarıyla sıfırlandı!', true);
+                setTimeout(checkWaStatus, 2000);
+            } catch (err) {
+                showAlert('Oturum onarma hatası: ' + err, false);
             }
         }
 
