@@ -343,13 +343,24 @@ journalctl -u dalaman-gateway -n 50 --no-pager
 journalctl -u dalaman-gateway -f              # Canlı WhatsApp log takibi
 ```
 
-### 2. WhatsApp Oturumunu Sıfırlama (Temiz QR Eşleme)
-Eğer WhatsApp'ta *"Mesaj bekleniyor. Bu işlem biraz zaman alabilir"* uyarısı görürseniz veya botu farklı bir telefona bağlamak isterseniz oturumu sıfırlayabilirsiniz:
-```bash
-# Eski anahtarları temizle ve temiz QR kod üret
-systemctl stop dalaman-gateway && rm -rf /opt/dalaman-suite-bot/gateway/auth_info && systemctl restart dalaman-gateway
-```
-*Ardından `http://<IP>:8000` panelinden veya `http://<IP>:3000/qr-view` adresinden yeni QR kodu telefonunuzla okutun.*
+### 2. WhatsApp Oturumunu Onarma veya Sıfırlama
+Eğer WhatsApp'ta *"Mesaj bekleniyor. Bu işlem biraz zaman alabilir"* uyarısı görürseniz oturumu sıfırlamanıza gerek kalmadan önce tek tıkla onarabilirsiniz:
+
+- **Yöntem A (Önerilen - Sıfırlama Yok):** Web paneli üst çubuğundaki **`[🔄 Bağlantıyı Tazele]`** butonuna tıklayın veya terminalden:
+  ```bash
+  # WhatsApp soketini yeniden bağlat (Oturum silinmez, QR gerekmez):
+  curl -X POST http://127.0.0.1:8000/api/whatsapp/reconnect
+  
+  # Belirli bir misafirin bozuk anahtarını temizleyip tazelet (örn: +48511818188):
+  curl -X POST -H "Content-Type: application/json" -d '{"phone":"48511818188"}' http://127.0.0.1:3000/repair-session
+  ```
+
+- **Yöntem B (Tam Sıfırlama & Temiz QR Eşleme):** Botu farklı bir telefona bağlamak isterseniz oturumu tamamen sıfırlayabilirsiniz:
+  ```bash
+  # Eski anahtarları temizle ve temiz QR kod üret
+  systemctl stop dalaman-gateway && rm -rf /opt/dalaman-suite-bot/gateway/auth_info && systemctl restart dalaman-gateway
+  ```
+  *Ardından `http://<IP>:8000` panelinden veya `http://<IP>:3000/qr-view` adresinden yeni QR kodu telefonunuzla okutun.*
 
 ### 3. Terminalden Doğrudan API Test ve Manuel Tetikleme Komutları
 Web arayüzüne girmeden doğrudan sunucu içinden komut satırıyla test veya tetikleme yapabilirsiniz:
@@ -411,6 +422,12 @@ Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır. Dilediğiniz gibi geli�
 
 ## 📝 Sürüm Notları / Changelog
 
+- **v1.5.0 (25 Eylül 2026):**
+  - **⭐ Doğrudan Google 5-Yıldızlı Yorum Entegrasyonu:** Misafir çıkışında gönderilen Google Maps yorum linki, doğrudan 5 yıldızlı değerlendirme ve yorum kutucuğunu açtıran resmi `https://g.page/r/CZgOLywsVwV5EBM/review` bağlantısıyla güncellendi.
+  - **🔄 Veritabanı Otomatik Geçişi (Migration):** Eski veritabanlarında kayıtlı genel harita arama URL'leri, bot başlatıldığında otomatik olarak yeni doğrudan değerlendirme linkine geçirildi.
+  - **🛡️ Kalıcı Baileys Yeniden Gönderim (Retry) ve Disk Deposu (`sent_messages_store.json`):** Baileys yeniden başlatılsa dahi gönderilen son 2.000 mesajın anahtarları diskte saklanarak karşı cihazın Signal ratchet anahtar yenileme (retry receipt) isteklerine cevap verilmesi sağlandı. Uçtan uca şifreleme senkronizasyonundan doğan *"Mesaj bekleniyor"* sorunu kalıcı olarak çözüldü.
+  - **🩺 Tek Tıkla Oturum Onarma & Yeniden Bağlanma (`/repair-session`, `/reconnect`):** Belirli bir telefon numarasıyla olan bozulmuş Signal oturum anahtarlarını logout yapmadan temizleyen otomatik onarım mekanizması eklendi. Web arayüzüne `[🔄 Bağlantıyı Tazele]` ve QR modalına `[Oturumu Onar]` butonları eklendi.
+  - **🔮 Netgsm Kurumsal WhatsApp Hattı Yol Haritası:** Şahsi `0542 367 45 99` hattının yerine Netgsm 0850 veya Muğla 0252 kurumsal sabit hattı üzerinden WhatsApp Business tescili ve Baileys ayrıştırma yol haritası dokümante edildi.
 - **v1.4.0 (14 Eylül 2026):**
   - **4 Sekmeli Modern Yönetim Paneli:** Resepsiyon & Misafirler, Test Laboratuvarı, CRM & Kampanyalar ve Ayarlar & Entegrasyon sekmeleri ile karmaşadan uzak temiz arayüz.
   - **Dinamik Tablo Filtreleme & Arama:** Rezervasyonları anlık durumlarına göre (Tümü, Bugün Giriş, Konaklayanlar, Bugün Çıkış, Gelecek) filtreleme ve canlı arama.
