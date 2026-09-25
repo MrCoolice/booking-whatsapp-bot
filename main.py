@@ -111,7 +111,7 @@ def init_db():
         "extension_price": "€75",
         "review_auto_send": "1", # 1: Çıkış günü otomatik Google & Booking yorum mesajı gönder, 0: Kapalı
         "review_auto_time": "12:30",
-        "google_review_url": "https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla",
+        "google_review_url": "https://g.page/r/CZgOLywsVwV5EBM/review",
         "msg_review": (
             "🌟 *Thank You for Staying With Us! / Bizi Tercih Ettiğiniz İçin Teşekkür Ederiz!* 🌴\n\n"
             "Dear Guest,\n"
@@ -177,6 +177,11 @@ def init_db():
     curr_disc = cur.fetchone()
     if curr_disc and ("DAS75" in curr_disc[0] or "DAS10" not in curr_disc[0]):
         cur.execute("UPDATE settings SET value = ? WHERE key = 'msg_discount_confirmed'", (defaults["msg_discount_confirmed"],))
+        
+    cur.execute("SELECT value FROM settings WHERE key = 'google_review_url'")
+    curr_gr = cur.fetchone()
+    if not curr_gr or "maps.google.com" in (curr_gr[0] or "") or not curr_gr[0].strip():
+        cur.execute("UPDATE settings SET value = 'https://g.page/r/CZgOLywsVwV5EBM/review' WHERE key = 'google_review_url'")
         
     conn.commit()
     conn.close()
@@ -778,7 +783,7 @@ def check_automatic_reviews():
         return
         
     suite_name = cfg.get("suite_name", "Dalaman Airport Suite 11")
-    google_review_url = cfg.get("google_review_url", "https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla")
+    google_review_url = cfg.get("google_review_url", "https://g.page/r/CZgOLywsVwV5EBM/review")
     
     for r in candidates:
         uid, c_in_raw, c_out_raw, phone, r_suite, booker_country, guest_lang = r
@@ -970,7 +975,7 @@ async def save_settings(
     welcome_auto_time: str = Form("15:00"),
     review_auto_send: str = Form("1"),
     review_auto_time: str = Form("12:30"),
-    google_review_url: str = Form("https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla"),
+    google_review_url: str = Form("https://g.page/r/CZgOLywsVwV5EBM/review"),
     msg_new_booking: str = Form(...),
     msg_checkin: str = Form(...),
     msg_checkout: str = Form(...),
@@ -1026,7 +1031,7 @@ async def manual_send_review(uid: str = Form(...), phone: str = Form(None)):
         
     cfg = get_settings()
     suite_name = cfg.get("suite_name", r_suite or "Dalaman Airport Suite 11")
-    google_review_url = cfg.get("google_review_url", "https://maps.google.com/?q=Ege+Mahallesi+Isparta+Sokak+No:6/1+Daire:11+Dalaman+Muğla")
+    google_review_url = cfg.get("google_review_url", "https://g.page/r/CZgOLywsVwV5EBM/review")
     clean_phone = normalize_phone_number(target_phone)
     lang = guest_lang or detect_guest_language(clean_phone, booker_country)
     
@@ -1724,7 +1729,7 @@ async def test_sandbox_sample(msg_type: str = Form(...), lang: str = Form("de"))
         "checkin_hour": checkin_hour,
         "checkout_hour": checkout_hour,
         "maps_url": maps_url,
-        "google_review_url": cfg.get("google_review_url", maps_url),
+        "google_review_url": cfg.get("google_review_url", "https://g.page/r/CZgOLywsVwV5EBM/review"),
         "extension_price": ext_price
     }
     
