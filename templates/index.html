@@ -1148,6 +1148,21 @@
                     text.innerText = 'WhatsApp: Bağlı (' + (data.phone ? data.phone.slice(-4) : 'Aktif') + ')';
                     badge.className = 'bg-slate-800 hover:bg-slate-700 text-emerald-300 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition border border-emerald-500/30 shadow-sm cursor-pointer';
                     if (mStatus) mStatus.innerText = 'Durum: Cihazınız başarıyla bağlı! (' + (data.phone || 'Aktif') + ')';
+                    const container = document.getElementById('waQrContainer');
+                    if (container && !container.dataset.connected) {
+                        container.dataset.connected = "1";
+                        container.innerHTML = `
+                            <div class="w-64 h-64 border-2 border-emerald-500/50 bg-emerald-50/70 rounded-2xl flex flex-col items-center justify-center text-emerald-800 p-4 space-y-2.5">
+                                <i class="fa-solid fa-circle-check text-5xl text-emerald-500 animate-bounce"></i>
+                                <span class="text-sm font-bold text-slate-800">Cihaz Başarıyla Bağlandı!</span>
+                                <span class="text-xs text-emerald-700 font-mono font-semibold">+${data.phone || 'Aktif'}</span>
+                                <span class="text-[11px] text-slate-400">Pencere otomatik kapatılıyor...</span>
+                            </div>
+                        `;
+                        setTimeout(() => {
+                            closeWhatsAppModal();
+                        }, 2000);
+                    }
                 } else if (data.status === 'qr_ready') {
                     dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
                     text.innerText = 'WhatsApp: QR Okutun';
@@ -1168,9 +1183,10 @@
             try {
                 const res = await fetch('/api/whatsapp/qr');
                 const data = await res.json();
+                if (data.status === 'connected') return;
                 const container = document.getElementById('waQrContainer');
                 const qrSrc = data.qr || data.qrImage;
-                if (qrSrc) {
+                if (qrSrc && container && !container.dataset.connected) {
                     container.innerHTML = '<img src="' + qrSrc + '" alt="WhatsApp QR Code" class="w-64 h-64 rounded-xl border border-slate-200 shadow-sm p-2 bg-white">';
                 }
             } catch (err) {
@@ -1179,6 +1195,8 @@
         }
 
         function openWhatsAppModal() {
+            const container = document.getElementById('waQrContainer');
+            if (container) delete container.dataset.connected;
             document.getElementById('waModal').classList.remove('hidden');
             loadQrCode();
             checkWaStatus();
