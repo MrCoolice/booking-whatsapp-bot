@@ -1169,8 +1169,9 @@
                 const res = await fetch('/api/whatsapp/qr');
                 const data = await res.json();
                 const container = document.getElementById('waQrContainer');
-                if (data.qr) {
-                    container.innerHTML = '<img src="' + data.qr + '" alt="WhatsApp QR Code" class="w-64 h-64 rounded-xl border border-slate-200 shadow-sm p-2 bg-white">';
+                const qrSrc = data.qr || data.qrImage;
+                if (qrSrc) {
+                    container.innerHTML = '<img src="' + qrSrc + '" alt="WhatsApp QR Code" class="w-64 h-64 rounded-xl border border-slate-200 shadow-sm p-2 bg-white">';
                 }
             } catch (err) {
                 console.error('QR alma hatası:', err);

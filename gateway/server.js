@@ -56,14 +56,20 @@ loadSentMessages();
 async function startSock() {
     connectionStatus = 'connecting';
     const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
-    const { version, isLatest } = await fetchLatestBaileysVersion();
+    
+    let version = [2, 3000, 1015901307];
+    try {
+        const vInfo = await fetchLatestBaileysVersion();
+        if (vInfo && vInfo.version) version = vInfo.version;
+    } catch (e) {
+        console.warn('[BAILEYS] Son surum bilgisi alinamadi, dahili surum kullaniliyor:', e.message);
+    }
 
     sock = makeWASocket({
         version,
         logger: pino({ level: 'silent' }),
-        printQRInTerminal: true,
         auth: state,
-        browser: ['DalamanSuiteBot', 'Chrome', '120.0.0.0'],
+        browser: ['Ubuntu', 'Chrome', '20.0.04'],
         syncFullHistory: false,
         markOnlineOnConnect: true,
         getMessage: async (key) => {
@@ -88,7 +94,7 @@ async function startSock() {
             } catch (err) {
                 console.error('QR olusturma hatasi:', err);
             }
-            console.log('Yeni WhatsApp QR Kodu hazir! Telefonunuzla okutun.');
+            console.log('Yeni WhatsApp QR Kodu hazir! Web arayuzunden okutabilirsiniz.');
         }
 
         if (connection === 'close') {
@@ -105,7 +111,13 @@ async function startSock() {
             if (shouldReconnect) {
                 setTimeout(startSock, 5000);
             } else {
-                console.log('Oturum kapatildi (Logged out). auth_info klasorunu temizleyip yeniden baslatin.');
+                console.log('Oturum kapatildi (Logged out). auth_info klasoru otomatik temizlenip yeni QR kod uretiliyor...');
+                try {
+                    fs.rmSync(AUTH_DIR, { recursive: true, force: true });
+                } catch (e) {
+                    console.error('auth_info silme hatasi:', e.message);
+                }
+                setTimeout(startSock, 3000);
             }
         } else if (connection === 'open') {
             connectionStatus = 'connected';
@@ -193,6 +205,7 @@ app.get('/qr', (req, res) => {
     }
     res.json({
         status: 'qr_ready',
+        qr: qrCodeImage,
         qrImage: qrCodeImage
     });
 });
@@ -324,8 +337,8 @@ app.post('/repair-session', async (req, res) => {
     }
 });
 
-// Sunucuyu Baslat (Yalnizca localhost uzerinden erisilebilir - Ag Guvenligi)
-app.listen(PORT, '127.0.0.1', () => {
-    console.log(`Yerel WhatsApp Gateway yalnizca yerel (127.0.0.1:${PORT}) olarak guvenli calisiyor.`);
+// Sunucuyu Baslat (Yerel ag ve localhost uzerinden erisilebilir)
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Yerel WhatsApp Gateway (0.0.0.0:${PORT}) uzerinde calisiyor.`);
     startSock();
 });
