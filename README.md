@@ -422,6 +422,11 @@ Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır. Dilediğiniz gibi geli�
 
 ## 📝 Sürüm Notları / Changelog
 
+- **v1.5.1 (28 Eylül 2026):**
+  - **📱 Karekod Gösterim & Otomatik Kapanma İyileştirmesi:** Web arayüzünde QR kodun modal içinde takılmadan anında belirmesi sağlandı. Telefonla eşleşme tamamlandığı an modalda *"✅ Cihaz Başarıyla Bağlandı!"* kartı gösterilerek pencerenin 2 saniye içinde otomatik kapanması sağlandı.
+  - **🛡️ Kendi Kendini Onaran Oturum (Self-Healing on Logout):** Telefonda cihaz silindiğinde veya oturum düştüğünde (`DisconnectReason.loggedOut`), Baileys diskteki eski `auth_info` anahtarlarını otomatik temizleyip 3 saniye içinde tertemiz yeni bir QR kod üretir. Konsoldan manuel dosya silme ihtiyacı kaldırıldı.
+  - **🌐 Gateway Yerel Ağ Erişimi:** Node.js WhatsApp Gateway servisi `0.0.0.0:3000` arayüzüne bağlanarak tarayıcıdan doğrudan `http://<IP>:3000/qr-view` tam ekran karekod sayfasına erişim açıldı.
+  - **⚡ Multi-Device Standart Tarayıcı İmzası:** Multi-device el sıkışmasının WhatsApp tarafından reddedilmemesi için istemci imzası standart Ubuntu/Chrome profiline çekildi; güncel WhatsApp Web protokol sürüm denetimi güçlendirildi.
 - **v1.5.0 (25 Eylül 2026):**
   - **⭐ Doğrudan Google 5-Yıldızlı Yorum Entegrasyonu:** Misafir çıkışında gönderilen Google Maps yorum linki, doğrudan 5 yıldızlı değerlendirme ve yorum kutucuğunu açtıran resmi `https://g.page/r/CZgOLywsVwV5EBM/review` bağlantısıyla güncellendi.
   - **🔄 Veritabanı Otomatik Geçişi (Migration):** Eski veritabanlarında kayıtlı genel harita arama URL'leri, bot başlatıldığında otomatik olarak yeni doğrudan değerlendirme linkine geçirildi.
