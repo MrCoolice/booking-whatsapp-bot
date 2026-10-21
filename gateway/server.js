@@ -1,6 +1,6 @@
 const express = require('express');
 const http = require('http');
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, makeInMemoryStore } = require('@whiskeysockets/baileys');
 const pino = require('pino');
 const QRCode = require('qrcode');
 const path = require('path');
@@ -23,7 +23,31 @@ let connectionStatus = 'disconnected'; // 'disconnected', 'connecting', 'qr_read
 let connectedUser = null;
 
 // Kalıcı Mesaj Hafızası (Persistent Message Store for E2EE Retry Receipts)
-const STORE_FILE = path.join(__dirname, 'sent_messages_store.json');
+// Resmi Baileys Bellek ve Mesaj Hafızası (Protobuf E2EE Retry Uyumlu)
+const STORE_FILE = path.join(__dirname, 'baileys_store.json');
+let store = null;
+try {
+    if (typeof makeInMemoryStore === 'function') {
+        store = makeInMemoryStore({ logger: pino({ level: 'silent' }) });
+        if (fs.existsSync(STORE_FILE)) {
+            try {
+                store.readFromFile(STORE_FILE);
+                console.log('[STORE] Baileys native hafiza dosyasi basariyla yuklendi.');
+            } catch (e) {
+                console.warn('[STORE] Hafiza dosyasi okunamadi, yeni olusturuluyor:', e.message);
+            }
+        }
+        setInterval(() => {
+            try {
+                if (store && store.writeToFile) {
+                    store.writeToFile(STORE_FILE);
+                }
+            } catch (e) {}
+        }, 15000);
+    }
+} catch (e) {
+    console.warn('[STORE] makeInMemoryStore baslatilamadi:', e.message);
+}
 let sentMessages = new Map();
 
 function loadSentMessages() {
@@ -73,14 +97,23 @@ async function startSock() {
         syncFullHistory: false,
         markOnlineOnConnect: true,
         getMessage: async (key) => {
+            if (store) {
+                try {
+                    const msg = await store.loadMessage(key.remoteJid, key.id);
+                    if (msg && msg.message) return msg.message;
+                } catch (e) {}
+            }
             if (key && key.id && sentMessages.has(key.id)) {
                 console.log(`[RETRY] Sifreleme retry talebi karsilandi -> Key ID: ${key.id}`);
                 return sentMessages.get(key.id);
             }
-            return undefined;
+            return { conversation: '' };
         }
     });
 
+    if (store) {
+        try { store.bind(sock.ev); } catch (e) {}
+    }
     sock.ev.on('creds.update', saveCreds);
 
     sock.ev.on('connection.update', async (update) => {
@@ -308,13 +341,13 @@ app.post('/repair-session', async (req, res) => {
     const rawPhone = req.body.phone || req.body.jid;
     try {
         let deletedCount = 0;
-        if (rawPhone) {
+        if (true) {
             const cleanPhone = String(rawPhone).replace(/\D/g, '');
             console.log(`[REPAIR] Spesifik numara oturumu onariliyor: +${cleanPhone}`);
             if (fs.existsSync(AUTH_DIR)) {
                 const files = fs.readdirSync(AUTH_DIR);
                 for (const f of files) {
-                    if (f.includes(cleanPhone)) {
+                    if (f.startsWith('session-') || f.startsWith('pre-key-') || f.startsWith('sender-key-')) {
                         try {
                             fs.unlinkSync(path.join(AUTH_DIR, f));
                             deletedCount++;
