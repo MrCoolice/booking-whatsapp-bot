@@ -1084,9 +1084,11 @@
         }
 
         async function sendWelcome(uid, inputId) {
-            const phone = document.getElementById(inputId).value;
-            if (!phone) {
-                showAlert('Lütfen misafir telefon numarasını giriniz.', false);
+            const phoneInput = document.getElementById(inputId);
+            const phone = phoneInput ? phoneInput.value.trim() : '';
+            const digits = phone.replace(/\D/g, '');
+            if (!phone || digits.length < 9) {
+                showAlert('⚠️ Lütfen en az 9-10 haneli geçerli ve eksiksiz bir telefon numarası giriniz (Örn: +90542... veya +44...).', false);
                 return;
             }
             try {
@@ -1116,7 +1118,13 @@
         }
 
         async function sendReview(uid, inputId) {
-            const phone = document.getElementById(inputId) ? document.getElementById(inputId).value : '';
+            const phoneInput = document.getElementById(inputId);
+            const phone = phoneInput ? phoneInput.value.trim() : '';
+            const digits = phone.replace(/\D/g, '');
+            if (!phone || digits.length < 9) {
+                showAlert('⚠️ Lütfen en az 9-10 haneli geçerli bir telefon numarası giriniz.', false);
+                return;
+            }
             try {
                 showAlert('Google & Booking.com değerlendirme ricası gönderiliyor...', true);
                 const data = new FormData();

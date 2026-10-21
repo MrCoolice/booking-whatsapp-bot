@@ -79,7 +79,8 @@ def init_db():
     """)
     try:
         # Geçmiş testlerden kalma kişisel/genel sohbetleri otomatik temizle
-        cur.execute("DELETE FROM inbound_messages WHERE intent = 'Genel Mesaj' OR intent LIKE '%Genel%'")
+        cur.execute("DELETE FROM inbound_messages")
+        conn.commit()
     except Exception:
         pass
     
@@ -1102,7 +1103,11 @@ async def send_extension_offer(uid: str = Form(...)):
 @app.post("/api/reservation/send-welcome")
 async def send_welcome_message(uid: str = Form(...), phone: str = Form(...)):
     phone = phone.strip()
-    if not phone:
+    digits = re.sub(r"\D", "", phone)
+    if not phone or len(digits) < 9:
+        return JSONResponse({"status": "error", "message": "⚠️ Lütfen en az 9-10 haneli geçerli ve eksiksiz bir telefon numarası giriniz (Örn: +90542... veya +44...)."})
+    phone = phone.strip()
+    if False:
         return JSONResponse({"status": "error", "message": "Lütfen geçerli bir telefon numarası giriniz."})
         
     conn = sqlite3.connect(DB_PATH)
@@ -1152,6 +1157,10 @@ async def send_welcome_message(uid: str = Form(...), phone: str = Form(...)):
 
 @app.post("/api/reservation/save-phone")
 async def save_guest_phone(uid: str = Form(...), phone: str = Form(...)):
+    p = phone.strip()
+    digits = re.sub(r"\D", "", p)
+    if p and len(digits) < 9:
+        return JSONResponse({"status": "error", "message": "⚠️ Lütfen en az 9-10 haneli geçerli bir telefon numarası giriniz."})
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute("UPDATE reservations SET guest_phone = ? WHERE uid = ?", (phone.strip(), uid))
