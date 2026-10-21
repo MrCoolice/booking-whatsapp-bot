@@ -1257,6 +1257,10 @@ async def wa_gateway_repair(phone: str = Form(None)):
 # -------------------------------------------------------------
 @app.post("/api/webhook/whatsapp-inbound")
 async def whatsapp_inbound_webhook(request: Request):
+    # KULLANICI TERCİHİ: Otomatik gelen mesaj bot yanıtlayıcısı tamamen devre dışı bırakıldı.
+    # Misafirlerle olan WhatsApp sohbetinin doğallığını korumak ve saçma cevapları engellemek için
+    # bot gelen mesajlara müdahale etmez.
+    return JSONResponse({"status": "disabled", "message": "Gelen mesaj bot tetikleyicisi devre dışı."})
     try:
         data = await request.json()
     except Exception:

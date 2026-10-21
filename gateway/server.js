@@ -130,6 +130,7 @@ async function startSock() {
 
     // 5. Iki Yonlu Dinleyici (Misafir Yanitlarini Yakalama & Webhook'a Bildirme)
     sock.ev.on('messages.upsert', async ({ messages, type }) => {
+        return; // KULLANICI TERCİHİ: Otomatik gelen mesaj dinleyicisi devre dışı
         if (type !== 'notify') return;
         for (const msg of messages) {
             if (!msg.message || msg.key.fromMe) continue;
