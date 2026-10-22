@@ -476,4 +476,16 @@ Bu proje [MIT Lisansı](LICENSE) ile lisanslanmıştır. Dilediğiniz gibi geli�
 
 ---
 
+### 📌 2. Resmi Meta WhatsApp Cloud API Entegrasyonu (Sıfır Hata & Kalıcı Kurumsal Altyapı)
+- **Amaç:** Baileys kütüphanesinin WhatsApp Web emülasyonundan kaynaklanan *"Mesaj bekleniyor..."*, QR oturum düşmesi veya E2EE eşitleme hatalarını **%100 ve kalıcı olarak tarihe gömmek**.
+- **Maliyet Avantajı:** Meta tarafından her ay ilk **1.000 görüşme (Service Conversation) tamamen ÜCRETSİZ ($0)**. Dalaman Airport Suite 11'in aylık misafir trafiği için sıfır maliyetlidir.
+- **Geçiş & Uygulama Adımları:**
+  1. **Meta Geliştirici Hesabı:** `developers.facebook.com` üzerinden *Dalaman Airport Suite* Business App ve WhatsApp ürününün kurulması.
+  2. **Netgsm / Sabit Numaranın Meta'ya Tescili:** Netgsm'den tahsis edilecek `0252` veya `0850` kurumsal hattın SMS/sesli arama ile Meta Cloud API sistemine bağlanması.
+  3. **Kalıcı Token Temini:** Meta Business Manager üzerinden süresi dolmayan kalıcı Sistem Kullanıcısı Token'ı (*Permanent System User Access Token*) üretilmesi.
+  4. **Gateway Sadeleştirmesi:** Proxmox LXC'deki Node.js / Baileys servisi devreden çıkarılarak, Python FastAPI (`main.py`) motorunun doğrudan Meta Graph API REST uçlarına (`graph.facebook.com/v21.0/...`) bağlanması.
+  5. **Resmi Şablonlar (Templates):** Karşılama, Wi-Fi, Konaklama Uzatma ve Google Yorum mesajlarının Meta Business panelinde tescillenip onaylatılması.
+
+---
+
 **Geliştirici:** [Ulaş Özbek (GölgeSiber)](https://golgesiber.com)
